@@ -4,6 +4,10 @@ import { AppBar, Menu, MenuItem, Button, Toolbar, Container, Box, Link as Materi
 import { Link as RouterLink } from 'react-router-dom';
 import { items, navCategories, adminItems, staffItems } from '../../../constants';
 
+import { useState, useEffect } from 'react';
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { projectAuth, projectFirestore } from '../../../firebase/config';
+
 const MiniNav = () => {
     const classes = useStyles();
     const [anchorEl, setAnchorEl] = React.useState(null);
@@ -14,6 +18,45 @@ const MiniNav = () => {
     const handleClose = () => {
         setAnchorEl(null);
     };
+
+    const [user] = useAuthState(projectAuth);
+    const [role, setRole] = useState([]);
+
+    useEffect(() => {
+        if (user != null) {
+            const userRef = projectFirestore.collection('users').where('uid', '==', user.uid);
+
+            const getUser = async () => {
+                try {
+                    const querySnapshot = await userRef.get();
+
+                    if (!querySnapshot.empty) {
+                        const doc = querySnapshot.docs[0];
+                        setRole(doc.data().role);
+                    } else {
+                        console.log("Không tìm thấy user trong Firestore");
+                        setRole(null);
+                    }
+                } catch (error) {
+                    console.error("Lỗi khi lấy user:", error);
+                    setRole(null);
+                }
+            };
+
+            getUser();
+        } else {
+            setRole(null);
+            // Kèm với việc xóa cái local
+            localStorage.removeItem('role');
+            localStorage.removeItem('user');
+        }
+    }, [user]);
+
+    useEffect(() => {
+        console.log("User:", user);
+        console.log("Role:", role);
+    }, [user, role]);
+
 
     return (
 
@@ -26,7 +69,7 @@ const MiniNav = () => {
             <Container>
                 <Toolbar>
                     <Box className={classes.wrapper} sx={{ flexGrow: 1 }}>
-                        {!(localStorage.getItem('role') === 'admin')
+                        {!(role === 'admin')
                             &&
                             <>
                                 <Button
@@ -72,7 +115,7 @@ const MiniNav = () => {
                         }
 
                         <>
-                            {localStorage.getItem('role') === 'admin' &&
+                            {role === 'admin' &&
                                 adminItems.map((item) => (
                                     <Box className={classes.navButton} key={item.value}>
                                         <Button
@@ -89,7 +132,7 @@ const MiniNav = () => {
                                         </Button>
                                     </Box>
                                 ))}
-                            {localStorage.getItem('role') === 'staff' &&
+                            {role === 'staff' &&
                                 staffItems.map((item) => (
                                     <Box className={classes.navButton} key={item.value}>
                                         <Button
@@ -107,7 +150,7 @@ const MiniNav = () => {
                                     </Box>
                                 ))
                             }
-                            {localStorage.getItem('role') === 'user' &&
+                            {role === 'user' &&
                                 items.map((item) => (
                                     <Box className={classes.navButton} key={item.value}>
                                         <Button

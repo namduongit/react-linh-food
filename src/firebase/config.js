@@ -8,12 +8,13 @@ import 'firebase/compat/storage';
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyCTD5vYOjxRwzMjlorZY_b4WPvhjZMOgXE",
-  authDomain: "ltn-seafood.firebaseapp.com",
-  projectId: "ltn-seafood",
-  storageBucket: "ltn-seafood.appspot.com",
-  messagingSenderId: "609523557488",
-  appId: "1:609523557488:web:5e1092838facafda2800b5"
+  apiKey: "AIzaSyA_Lk40-hzuCxSgMHNBXr0cw4HcT65QNyU",
+  authDomain: "linh-food.firebaseapp.com",
+  projectId: "linh-food",
+  storageBucket: "linh-food.firebasestorage.app",
+  messagingSenderId: "845685820639",
+  appId: "1:845685820639:web:60b011bf95d664addaad6a",
+  measurementId: "G-03NYKQZDQ8"
 };
 
 // Initialize Firebase
