@@ -10,6 +10,7 @@ import useGetProvinces from '../../../services/province';
 import { useAuthState } from "react-firebase-hooks/auth";
 
 import { toast } from '../../../services/toast';
+import { showNotification } from '../../../services/showNotification';
 
 const StaffPayment = () => {
     const classes = useStyles();
@@ -24,7 +25,10 @@ const StaffPayment = () => {
             seat: 0
         },
         validationSchema: validationSeat,
-        onSubmit: values => {
+        onSubmit: async values => {
+            const confirm = await showNotification('Bạn có chắc đặt đơn hàng này ?');
+            if (!confirm) return;
+
             projectFirestore.collection('seat').doc(seatID).update({
                 available: false,
                 total: localStorage.getItem('total'),
@@ -48,7 +52,7 @@ const StaffPayment = () => {
             });
             localStorage.setItem('note', '');
             navigate('/staff/dinein');
-            const cart_query = projectFirestore.collection('cart').where('uid', '==', JSON.parse(localStorage.getItem('user')).uid);
+            const cart_query = projectFirestore.collection('cart').where('uid', '==', user.uid);
             cart_query.get().then((querySnapshot) => {
                 querySnapshot.forEach((doc) => {
                     doc.ref.delete();
@@ -121,7 +125,7 @@ const StaffPayment = () => {
                                             value={seat.number}
                                             onClick={() => setSeatID(seat.id)}
                                         >
-                                            {seat.number}
+                                            {seat.number} - {seat.name}
                                         </MenuItem>
                                     ))}
                                 </Select>

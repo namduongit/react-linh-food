@@ -1,12 +1,17 @@
 import { useState, useEffect } from 'react';
 import { Container, FormControl, InputLabel, Typography, Box, TextField, Select, Button, MenuItem, Input } from '@mui/material'
 import { useStyles } from './styles';
-import { projectFirestore, projectStorage } from '../../../firebase/config';
+
+import { projectFirestore } from '../../../firebase/config';
 import { categories, units, seafoodTypes, sideTypes } from '../../../constants';
 
 import { toast } from '../../../services/toast';
 
+// Băm và lưu hình anh
+import { projectStorage } from '../../../firebase/config';
+
 function AddMenu() {
+    // Nút chọn hình ảnh từ máy
     const [fileURL, setFileURL] = useState('');
     const [name, setName] = useState('');
     const [category, setCategory] = useState('');
@@ -70,7 +75,7 @@ function AddMenu() {
                 <InputLabel>Chọn ảnh</InputLabel>
                 <Input
                     className={classes.input}
-                    type="file"
+                    type="file" // type là file => upload file từ máy lên
                     fullWidth
                     onChange={handleUpload}
                 />

@@ -20,8 +20,11 @@ const firebaseConfig = {
 // Initialize Firebase
 firebase.initializeApp(firebaseConfig);
 
+// Lưu ảnh
 const projectStorage = firebase.storage();
+// Lưu cơ sơ dữ liệu
 const projectFirestore = firebase.firestore();
+// Đăng nhập thông qua ứng dụng (Google, Facebook, ...)
 const projectAuth = firebase.auth();
 
 export { projectStorage, projectFirestore, projectAuth };

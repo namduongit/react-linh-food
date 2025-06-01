@@ -24,12 +24,17 @@ const Item = ({ doc }) => {
     const [cart, setCart] = useState([]);
 
     const handleClick = () => {
+        // Lấy sản phẩm khi ấn vào giỏ hàng
         const check = cart.find(item => (item.menuId === id));
+        // Kiểm tra người dùng hiện tại
         if (user) {
+            // Nếu sản phẩm đó tồn tại
             if (check) {
+                // Cập nhật số lượng lên 1
                 projectFirestore.collection('cart').doc(check.id).update({
                     quantity: firebase.firestore.FieldValue.increment(1)
                 })
+            // Người lại sản phẩm đó chưa có trong giỏ hàng thì tạo mới
             } else {
                 projectFirestore.collection('cart').add({
                     uid: user.uid,
@@ -53,25 +58,14 @@ const Item = ({ doc }) => {
             projectAuth.signInWithPopup(provider)
                 .then(({ user }) => {
                     const check = docs.find(doc => doc.uid === user.uid);
-                    if (check) {
-                        localStorage.setItem('user', JSON.stringify(check));
-                        if (check.role === 'admin') {
-                            localStorage.setItem('role', 'admin'); //
-                        } else if (check.role === 'staff') {
-                            localStorage.setItem('role', 'staff');
-                        } else {
-                            localStorage.setItem('role', 'user');
-                        }
-                    } else {
+                    if (!check) {
                         user.role = 'user';
                         projectFirestore.collection('users').add({
                             name: user.displayName,
                             uid: user.uid,
                             email: user.email,
                             role: user.role,
-                        })
-
-                        localStorage.setItem('role', 'user');
+                        });
                     }
                 })
                 .catch((error) => {

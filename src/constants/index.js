@@ -172,6 +172,22 @@ export const adminItems = [
         label: 'Thực đơn',
         value: 'menu',
     },
+    {
+        label: 'Đơn hàng vận chuyển',
+        value: 'order',
+    },
+    {
+        label: 'Đơn hàng tại chỗ',
+        value: 'dinein',
+    },
+    {
+        label: 'Chỗ ngồi',
+        value: 'seat',
+    },
+    {
+        label: 'Khách đặt bàn',
+        value: 'reserve',
+    },
 ]
 
 export const staffItems = [

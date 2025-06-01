@@ -12,6 +12,8 @@ const Seat = () => {
     const classes = useStyles();
     const [userBill, setUserBill] = useState([]);
     const [seatState, setSeatState] = useState([]);
+
+    const [seatName, setSeateName] = useState('');
     const [seatNumber, setSeatNumber] = useState(0);
 
     const handleSeat = (available, number, id) => {
@@ -44,6 +46,7 @@ const Seat = () => {
     const handleAddSeat = () => {
         if (seatNumber > 0) {
             projectFirestore.collection('seat').add({
+                name: seatName,
                 number: seatNumber,
                 available: true,
                 total: 0,
@@ -51,7 +54,7 @@ const Seat = () => {
         } else {
             toast({
                 title: 'Thông báo',
-                message: 'Số bàn phải lớn hơn 0',
+                message: 'Số người ngồi phải lớn hơn 0',
                 type: 'success',
                 duration: 3000
             });
@@ -107,7 +110,7 @@ const Seat = () => {
                         >
                             <Box>
                                 <Typography>
-                                    Seat {seat.number}
+                                    Seat {seat.number} - Name {seat.name}
                                 </Typography>
                                 <Typography>
                                     Tổng {currencyFormat(seat.total)} đ
@@ -126,10 +129,23 @@ const Seat = () => {
             </Typography>
             <Box className={classes.form}>
                 <TextField
-                    label="Số bàn"
+                    label="Tên bàn"
+                    fullWidth
+                    value={seatName}
+                    onChange={(event) => setSeateName(event.target.value)}
+                    sx={{
+                        marginTop: "10px"
+                    }}
+                />
+
+                <TextField
+                    label="Số người"
                     fullWidth
                     value={seatNumber}
                     onChange={(event) => setSeatNumber(event.target.value)}
+                    sx={{
+                        marginTop: "10px"
+                    }}
                 />
                 <Button onClick={handleAddSeat}>
                     Thêm

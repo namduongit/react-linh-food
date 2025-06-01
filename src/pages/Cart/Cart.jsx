@@ -14,7 +14,9 @@ const Cart = () => {
     const [user] = useAuthState(projectAuth);
     const [docs, setDocs] = useState([]);
     const [total, setTotal] = useState(0);
-    const [note, setNote] = useState('')
+    const [note, setNote] = useState('');
+
+    const [role, setRole] = useState([]);
 
     const renderTotal = useCallback(() => {
         const total = docs.reduce((n, { price, quantity }) => n + (parseInt(price) * quantity), 0);
@@ -67,6 +69,33 @@ const Cart = () => {
     useEffect(() => {
         renderTotal()
     }, [renderTotal])
+
+    useEffect(() => {
+        if (user != null) {
+          const userRef = projectFirestore.collection('users').where('uid', '==', user.uid);
+    
+          const getUser = async () => {
+            try {
+              const querySnapshot = await userRef.get();
+    
+              if (!querySnapshot.empty) {
+                const doc = querySnapshot.docs[0];
+                setRole(doc.data().role);
+              } else {
+                console.log("Không tìm thấy user trong Firestore");
+                setRole(null);
+              }
+            } catch (error) {
+              console.error("Lỗi khi lấy user:", error);
+              setRole(null);
+            }
+          };
+    
+          getUser();
+        } else {
+          setRole(null);
+        }
+      }, [user]);
 
     return (
         <Container className={classes.container}>
@@ -157,7 +186,7 @@ const Cart = () => {
                                 color="warning"
                                 style={{ marginBottom: '10px' }}
                             >
-                                {localStorage.getItem('role') === 'user' &&
+                                {role === 'user' &&
                                     <MaterialLink
                                         underline="none"
                                         color="inherit"
@@ -167,7 +196,7 @@ const Cart = () => {
                                         Tiến hành đặt hàng
                                     </MaterialLink>
                                 }
-                                {localStorage.getItem('role') === 'staff' &&
+                                {role === 'staff' &&
                                     <MaterialLink
                                         underline="none"
                                         color="inherit"

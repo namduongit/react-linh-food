@@ -14,6 +14,7 @@ import { useAuthState } from "react-firebase-hooks/auth";
 import { useState, useEffect } from 'react';
 
 import { toast } from '../../services/toast';
+import { showNotification } from '../../services/showNotification';
 
 const Payment = () => {
     const [user] = useAuthState(projectAuth);
@@ -40,8 +41,10 @@ const Payment = () => {
             payment: 'cod'
         },
         validationSchema: validationSchema,
-        onSubmit: values => {
-
+        onSubmit: async values => {
+            const confirm = await showNotification('Bạn chắc chắn đặt đơn hàng này ?');
+            if (!confirm) return;
+            
 
             projectFirestore.collection('order').add({
                 name: values.name,
@@ -52,7 +55,7 @@ const Payment = () => {
                 ward: selectedWard.name,
                 payment: values.payment,
                 note: localStorage.getItem('note'),
-                userID: JSON.parse(localStorage.getItem('user')).uid,
+                userID: user.uid,
                 total: localStorage.getItem('total'),
                 cart: docs,
                 status: "Chưa xác nhận",
@@ -67,7 +70,7 @@ const Payment = () => {
             });
             localStorage.setItem('note', '');
             navigate('/');
-            const cart_query = projectFirestore.collection('cart').where('uid', '==', JSON.parse(localStorage.getItem('user')).uid);
+            const cart_query = projectFirestore.collection('cart').where('uid', '==', user.uid);
             cart_query.get().then((querySnapshot) => {
                 querySnapshot.forEach((doc) => {
                     doc.ref.delete();

@@ -46,7 +46,6 @@ function App() {
   const [user] = useAuthState(projectAuth);
   const [role, setRole] = useState([]);
 
-
   useEffect(() => {
     if (user != null) {
       const userRef = projectFirestore.collection('users').where('uid', '==', user.uid);
@@ -71,17 +70,8 @@ function App() {
       getUser();
     } else {
       setRole(null);
-      // Kèm với việc xóa cái local
-      localStorage.removeItem('role');
-      localStorage.removeItem('user');
     }
   }, [user]);
-
-
-  useEffect(() => {
-    console.log("User:", user);
-    console.log("Role:", role);
-  }, [user, role]);
 
 
   return (
@@ -113,6 +103,11 @@ function App() {
                   <Route exact path='/admin/role' element={<AdminRole />} />
                   <Route exact path='/admin/users' element={<Users />} />
                   <Route exact path='/admin/staffs' element={<Staffs />} />
+                  <Route exact path='/admin/seat' element={<Seat />} />
+                  <Route exact path='/admin/payment' element={<StaffPayment />} />
+                  <Route exact path='/admin/order' element={<StaffOrder />} />
+                  <Route exact path='/admin/dinein' element={<DineIn />} />
+                  <Route exact path='/admin/reserve' element={<StaffReserve />} />
                 </>
               )
             }

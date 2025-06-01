@@ -8,8 +8,10 @@ import { useState, useEffect } from 'react';
 
 //firebase
 import { projectFirestore } from '../../../../firebase/config';
+import { showNotification } from '../../../../services/showNotification';
 
 const Users = () => {
+
     const classes = useStyles();
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(5);
@@ -25,10 +27,10 @@ const Users = () => {
         setPage(0);
     };
 
-    const handleClear = (id) => {
-        if (window.confirm('Are you sure you want to delete?')) {
-            projectFirestore.collection('users').doc(id).delete();
-        }
+    const handleClear = async (id) => {
+        const confirm = await showNotification('Bạn có chắc chắn xóa tài khoản này không ?');
+        if (!confirm) return;
+        projectFirestore.collection('users').doc(id).delete();
     }
 
     useEffect(() => {
@@ -46,6 +48,8 @@ const Users = () => {
             })
 
     }, [])
+
+    console.log(docs)
 
     return (
         <Container>

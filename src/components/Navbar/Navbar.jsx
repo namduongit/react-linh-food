@@ -23,31 +23,21 @@ const Navbar = () => {
     const [userCart, setUserCart] = useState([]);
     const navigate = useNavigate();
 
+    const [role, setRole] = useState([]);
+
     const signInWithGoogle = () => {
         const provider = new firebase.auth.GoogleAuthProvider();
         projectAuth.signInWithPopup(provider)
             .then(({ user }) => {
                 const check = docs.find(doc => doc.uid === user.uid);
-                if (check) {
-                    console.log(check)
-                    localStorage.setItem('user', JSON.stringify(check));
-                    if (check.role === 'admin') {
-                        localStorage.setItem('role', 'admin');
-                    } else if (check.role === 'staff') {
-                        localStorage.setItem('role', 'staff');
-                    } else {
-                        localStorage.setItem('role', 'user');
-                    }
-                } else {
+                if (!check) {
                     user.role = 'user';
                     projectFirestore.collection('users').add({
                         name: user.displayName,
                         uid: user.uid,
                         email: user.email,
                         role: user.role,
-                    })
-
-                    localStorage.setItem('role', 'user');
+                    });
                 }
             })
             .catch((error) => {
@@ -62,18 +52,24 @@ const Navbar = () => {
         }
         projectAuth.signOut()
             .then(() => {
-                localStorage.setItem('user', null);
-                localStorage.setItem('role', 'guest');
+                toast({
+                    title: 'Thông báo',
+                    message: 'Đăng xuất thành công',
+                    type: 'success',
+                    duration: 3000
+                });
+                return;
             })
             .catch((error) => {
                 console.log(error);
+                // Có lỗi khi đăng xuất
+                toast({
+                    title: 'Thông báo',
+                    message: 'Đăng xuất thất bại',
+                    type: 'warning',
+                    duration: 3000
+                });
             });
-        toast({
-            title: 'Thông báo',
-            message: 'Đăng xuất thành công',
-            type: 'success',
-            duration: 3000
-        });
     }
 
 
@@ -106,6 +102,34 @@ const Navbar = () => {
                 })
         }
     }, [setUserCart, setDocs, user])
+
+
+    useEffect(() => {
+        if (user != null) {
+            const userRef = projectFirestore.collection('users').where('uid', '==', user.uid);
+
+            const getUser = async () => {
+                try {
+                    const querySnapshot = await userRef.get();
+
+                    if (!querySnapshot.empty) {
+                        const doc = querySnapshot.docs[0];
+                        setRole(doc.data().role);
+                    } else {
+                        console.log("Không tìm thấy user trong Firestore");
+                        setRole(null);
+                    }
+                } catch (error) {
+                    console.error("Lỗi khi lấy user:", error);
+                    setRole(null);
+                }
+            };
+
+            getUser();
+        } else {
+            setRole(null);
+        }
+    }, [user]);
 
     return (
         <div>
@@ -174,7 +198,8 @@ const Navbar = () => {
 
                         }
 
-                        {(localStorage.getItem('role') === 'user' || localStorage.getItem('role') === 'staff') &&
+                        {/* Nếu là nhân viên hoặc khách hàng thì có phần giỏ hàng, còn quản trị viên thì không */}
+                        {(role === 'user' || role === 'staff') &&
                             <IconButton
                                 edge="end"
                                 aria-label="account of current user"

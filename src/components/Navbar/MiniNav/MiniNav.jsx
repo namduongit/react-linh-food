@@ -46,17 +46,8 @@ const MiniNav = () => {
             getUser();
         } else {
             setRole(null);
-            // Kèm với việc xóa cái local
-            localStorage.removeItem('role');
-            localStorage.removeItem('user');
         }
     }, [user]);
-
-    useEffect(() => {
-        console.log("User:", user);
-        console.log("Role:", role);
-    }, [user, role]);
-
 
     return (
 

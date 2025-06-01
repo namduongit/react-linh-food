@@ -8,6 +8,8 @@ import { useState, useEffect } from 'react';
 
 //firebase
 import { projectFirestore } from '../../../../firebase/config';
+import { toast } from '../../../../services/toast';
+import { showNotification } from '../../../../services/showNotification';
 
 const Staffs = () => {
     const classes = useStyles();
@@ -24,10 +26,15 @@ const Staffs = () => {
         setPage(0);
     };
 
-    const handleClear = (id) => {
-        if (window.confirm('Are you sure you want to delete?')) {
-            projectFirestore.collection('users').doc(id).delete();
-        }
+    const handleClear = async (id) => {
+        const confirm = await showNotification('Bạn có chắc xóa nhân viên này không ?');
+        if (!confirm) return;
+        toast({
+            title: 'Thông báo',
+            message: 'Xóa thành công nhân viên',
+            type: 'success',
+            duration: 3000
+        });
     }
 
     useEffect(() => {

@@ -7,13 +7,18 @@ import { useStyles } from './styles';
 import { useState, useEffect } from 'react';
 
 //firebase
-import { projectFirestore } from '../../../firebase/config';
+import { projectAuth, projectFirestore } from '../../../firebase/config';
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { toast } from '../../../services/toast';
+import { showNotification } from '../../../services/showNotification';
 
 const AdminRole = () => {
     const classes = useStyles();
     const [docs, setDocs] = useState([]);
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(5);
+
+    const [user] = useAuthState(projectAuth);
 
     const rolesArray = ['admin', 'staff', 'user'];
 
@@ -32,10 +37,20 @@ const AdminRole = () => {
         setPage(0);
     };
 
-    const handleClear = (id) => {
-        if (window.confirm('Are you sure you want to delete?')) {
-            projectFirestore.collection('users').doc(id).delete();
+    const handleClear = async (id, uid) => {
+        if (uid == user.uid) {
+            toast({
+                title: 'Cảnh báo',
+                message: 'Bạn không thể xóa tài khoản của mình',
+                type: 'warning',
+                duration: 3000
+            });
+            return;
         }
+
+        const confirm = await showNotification('Bạn có chắc chắn xóa tài khoản này ?');
+        if (!confirm) return;
+        projectFirestore.collection('users').doc(id).delete();
     }
 
     useEffect(() => {
@@ -53,7 +68,7 @@ const AdminRole = () => {
             })
     }, [setDocs]);
 
-    console.log(docs);
+    console.log(docs)
 
     return (
         <Container>
@@ -90,6 +105,7 @@ const AdminRole = () => {
                                             <MenuItem
                                                 key={index}
                                                 value={role}
+                                                disabled={user.uid == doc.uid}
                                             >
                                                 {role}
                                             </MenuItem>
@@ -99,7 +115,7 @@ const AdminRole = () => {
                                 <TableCell align="center">
                                     <ClearIcon
                                         className={classes.clearIcon}
-                                        onClick={() => handleClear(doc.id)}
+                                        onClick={() => handleClear(doc.id, doc.uid)}
                                     />
                                 </TableCell>
                             </TableRow>
