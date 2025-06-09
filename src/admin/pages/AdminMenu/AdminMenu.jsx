@@ -11,13 +11,16 @@ import { currencyFormat } from '../../../utils/currencyFormat'
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import { showNotification } from '../../../services/showNotification';
+import { toast } from '../../../services/toast';
+
 const AdminMenu = () => {
     const classes = useStyles();
     const [page, setPage] = useState(0);
     const [docs, setDocs] = useState([]);
     const [rowsPerPage, setRowsPerPage] = useState(5);
     const navigate = useNavigate();
-    
+
     const handleChangePage = (event, newPage) => {
         setPage(newPage);
     };
@@ -27,10 +30,16 @@ const AdminMenu = () => {
         setPage(0);
     };
 
-    const handleClear = (id) => {
-        if (window.confirm('Are you sure you want to delete?')) {
-            projectFirestore.collection('menu').doc(id).delete();
-        }
+    const handleClear = async (id) => {
+        const confirm = await showNotification('Bạn có chắc chắn xóa thực đơn này ?');
+        if (!confirm) return;
+        projectFirestore.collection('menu').doc(id).delete();
+        toast({
+            title: 'Thông báo',
+            message: `Xóa thực đơn ${id} thành công`,
+            type: 'success',
+            duration: 3000
+        });
     }
 
     const handleEdit = (id) => {

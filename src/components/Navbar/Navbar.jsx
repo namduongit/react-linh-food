@@ -132,11 +132,15 @@ const Navbar = () => {
     }, [user]);
 
     return (
-        <div>
-            <AppBar
+        <div style={{
+            position: 'sticky',
+            top: '0',
+            zIndex: '9999'
+        }}>
+            <div
                 elevation={0}
                 className={classes.navbar}
-                style={{ backgroundColor: '#2e9ed5' }}
+                style={{ backgroundColor: '#2e9ed5'}}
                 position="fixed"
             >
                 <Container maxWidth="xl">
@@ -220,8 +224,8 @@ const Navbar = () => {
                         }
                     </Toolbar>
                 </Container>
-            </AppBar>
-            <MiniNav />
+                <MiniNav />
+            </div>
         </div>
     )
 }

@@ -1,6 +1,8 @@
 //material-ui
 import { Typography, Table, TableContainer, Paper, TableBody, TableCell, TableHead, TableRow, TableFooter, TablePagination, Container } from '@mui/material';
 import { useStyles } from './styles';
+import { Button, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
+
 
 //react
 import { useState, useEffect } from 'react';
@@ -19,6 +21,35 @@ const AdminTotal = () => {
     const [bigTotalOrder, setBigTotalOrder] = useState(0);
     const [bigTotalDineIn, setBigTotalDineIn] = useState(0);
     const [bigTotal, setBigTotal] = useState(0);
+
+    // Chi tiết
+    const [openDialog, setOpenDialog] = useState(false);
+    const [selectedOrder, setSelectedOrder] = useState(null);
+
+    const handleOpenDialog = (order) => {
+        setSelectedOrder(order);
+        setOpenDialog(true);
+        console.log(order)
+    };
+
+    const handleCloseDialog = () => {
+        setOpenDialog(false);
+        setSelectedOrder(null);
+    }
+
+    // Chi tiết tại chỗ
+    const [openDineInDialog, setOpenDineInDialog] = useState(false);
+    const [selectedDineInOrder, setSelectedDineInOrder] = useState(null);
+
+    const handleOpenDineInDialog = (order) => {
+        setSelectedDineInOrder(order);
+        setOpenDineInDialog(true);
+    };
+
+    const handleCloseDineInDialog = () => {
+        setSelectedDineInOrder(null);
+        setOpenDineInDialog(false);
+    };
 
     const handleChangePage = (event, newPage) => {
         setPage(newPage);
@@ -73,7 +104,7 @@ const AdminTotal = () => {
     return (
         <Container className={classes.container}>
             <TableContainer component={Paper} className={classes.tableContainer}>
-                <Typography style={{ marginTop: '30px' }}>
+                <Typography style={{ marginTop: '30px', textAlign: 'center', fontWeight: 'bold' }}>
                     Tổng doanh thu đơn vận chuyển: {currencyFormat(bigTotalOrder)} đ
                 </Typography>
                 <Table sx={{ minWidth: 650 }} >
@@ -82,6 +113,7 @@ const AdminTotal = () => {
                             <TableCell className={classes.tableHeader} align="center">ID </TableCell>
                             <TableCell className={classes.tableHeader} align="center">Date</TableCell>
                             <TableCell className={classes.tableHeader} align="center">Total</TableCell>
+                            <TableCell className={classes.tableHeader} align="center">Details</TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
@@ -93,6 +125,11 @@ const AdminTotal = () => {
                                 <TableCell align="center">{doc.id}</TableCell>
                                 <TableCell align="center">{doc.date}</TableCell>
                                 <TableCell align="center">{currencyFormat(doc.total)} đ</TableCell>
+                                <TableCell align="center">
+                                    <Button variant="outlined" size="small" onClick={() => handleOpenDialog(doc)}>
+                                        Chi tiết
+                                    </Button>
+                                </TableCell>
                             </TableRow>
                         ))}
                     </TableBody>
@@ -111,7 +148,7 @@ const AdminTotal = () => {
                 </Table>
             </TableContainer>
             <TableContainer component={Paper} className={classes.tableContainer}>
-                <Typography style={{ marginTop: '30px' }}>
+                <Typography style={{ marginTop: '30px', textAlign: 'center', fontWeight: 'bold' }}>
                     Tổng doanh thu đơn mang về: {currencyFormat(bigTotalDineIn)} đ
                 </Typography>
                 <Table sx={{ minWidth: 650 }} >
@@ -120,6 +157,7 @@ const AdminTotal = () => {
                             <TableCell className={classes.tableHeader} align="center">ID </TableCell>
                             <TableCell className={classes.tableHeader} align="center">Date</TableCell>
                             <TableCell className={classes.tableHeader} align="center">Total</TableCell>
+                            <TableCell className={classes.tableHeader} align="center">Details</TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
@@ -131,6 +169,11 @@ const AdminTotal = () => {
                                 <TableCell align="center">{doc.id}</TableCell>
                                 <TableCell align="center">{doc.date}</TableCell>
                                 <TableCell align="center">{currencyFormat(doc.total)} đ</TableCell>
+                                <TableCell align="center">
+                                    <Button variant="outlined" size="small" onClick={() => handleOpenDineInDialog(doc)}>
+                                        Chi tiết
+                                    </Button>
+                                </TableCell>
                             </TableRow>
                         ))}
                     </TableBody>
@@ -148,9 +191,74 @@ const AdminTotal = () => {
                     </TableFooter>
                 </Table>
             </TableContainer>
-            <Typography style={{ marginTop: '30px' }} variant='h4'>
+            <Typography style={{ marginTop: '10px', marginBottom: '30px' }} variant='h5'>
                 Tổng doanh thu: {currencyFormat(bigTotal)} đ
             </Typography>
+
+            {/* Phần Dialog hóa đơn vận chuyển */}
+            <Dialog open={openDialog} onClose={handleCloseDialog} fullWidth maxWidth="sm">
+                <DialogTitle>Chi tiết hóa đơn vận chuyển</DialogTitle>
+                <DialogContent dividers>
+                    {selectedOrder ? (
+                        <div>
+                            <Typography><strong>ID:</strong> {selectedOrder.id}</Typography>
+                            <Typography><strong>Ngày:</strong> {selectedOrder.date}</Typography>
+                            <Typography><strong>Tổng tiền:</strong> {currencyFormat(selectedOrder.total)} đ</Typography>
+
+                            {selectedOrder.cart && (
+                                <>
+                                    <Typography><strong>Món đã đặt:</strong></Typography>
+                                    <ul>
+                                        {selectedOrder.cart.map((item, index) => (
+                                            <li key={index}>
+                                                {item.name} - {item.quantity} x {currencyFormat(item.price)} đ
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </>
+                            )}
+                        </div>
+                    ) : (
+                        <Typography>Không có dữ liệu</Typography>
+                    )}
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleCloseDialog}>Đóng</Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* Phần Dialog hóa đơn tại chỗ */}
+            <Dialog open={openDineInDialog} onClose={handleCloseDineInDialog} fullWidth maxWidth="sm">
+                <DialogTitle>Chi tiết hóa đơn tại chỗ</DialogTitle>
+                <DialogContent dividers>
+                    {selectedDineInOrder ? (
+                        <div>
+                            <Typography><strong>ID:</strong> {selectedDineInOrder.id}</Typography>
+                            <Typography><strong>Ngày:</strong> {selectedDineInOrder.date}</Typography>
+                            <Typography><strong>Tổng tiền:</strong> {currencyFormat(selectedDineInOrder.total)} đ</Typography>
+
+                            {selectedDineInOrder.cart && (
+                                <>
+                                    <Typography><strong>Món đã đặt:</strong></Typography>
+                                    <ul>
+                                        {selectedDineInOrder.cart.map((item, index) => (
+                                            <li key={index}>
+                                                {item.name || item.subtitle || 'Món không rõ'} - {item.quantity} x {currencyFormat(item.price)} đ
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </>
+                            )}
+                        </div>
+                    ) : (
+                        <Typography>Không có dữ liệu</Typography>
+                    )}
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleCloseDineInDialog}>Đóng</Button>
+                </DialogActions>
+            </Dialog>
+
         </Container>
     )
 }

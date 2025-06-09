@@ -55,16 +55,7 @@ const Details = () => {
       projectAuth.signInWithPopup(provider)
         .then(({ user }) => {
           const check = docs.find(doc => doc.uid === user.uid);
-          if (check) {
-            localStorage.setItem('user', JSON.stringify(check));
-            if (check.role === 'admin') {
-              localStorage.setItem('role', 'admin'); //
-            } else if (check.role === 'staff') {
-              localStorage.setItem('role', 'staff');
-            } else {
-              localStorage.setItem('role', 'user');
-            }
-          } else {
+          if (!check) {
             user.role = 'user';
             projectFirestore.collection('users').add({
               name: user.displayName,
@@ -72,8 +63,6 @@ const Details = () => {
               email: user.email,
               role: user.role,
             })
-
-            localStorage.setItem('role', 'user');
           }
         })
         .catch((error) => {

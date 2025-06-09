@@ -51,11 +51,11 @@ const MiniNav = () => {
 
     return (
 
-        <AppBar
+        <div
             elevation={0}
             className={classes.root}
             position="fixed"
-            style={{ backgroundColor: '#2cbde5' }}
+            style={{ backgroundColor: '#2cbde5'}}
         >
             <Container>
                 <Toolbar>
@@ -165,7 +165,7 @@ const MiniNav = () => {
             </Container>
 
 
-        </AppBar>
+        </div>
     )
 }
 

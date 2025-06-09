@@ -2,7 +2,7 @@ import { makeStyles } from "@mui/styles";
 
 export const useStyles = makeStyles((theme) => ({
     container: {
-        marginTop: '200px',
+        marginTop: '60px',
         marginBottom: '130px'
     },
     title: {

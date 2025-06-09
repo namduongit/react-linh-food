@@ -8,12 +8,11 @@ const Footer = () => {
     const classes = useStyles();
 
     return (
-        <AppBar
+        <div
             position="static"
             style={{
                 top: 'auto',
                 bottom: 0,
-                marginTop: '50px',
                 backgroundColor: '#e3e3e3',
                 color: 'black'
             }}
@@ -48,7 +47,7 @@ const Footer = () => {
                     </Grid>
                 </Grid>
             </Toolbar>
-        </AppBar>
+        </div>
     )
 }
 

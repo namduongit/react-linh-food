@@ -8,6 +8,8 @@ import CheckIcon from '@mui/icons-material/Check';
 
 //react
 import { useState, useEffect } from 'react';
+import { showNotification } from '../../../services/showNotification';
+import { toast } from '../../../services/toast';
 
 const StaffReserve = () => {
     const classes = useStyles();
@@ -25,18 +27,32 @@ const StaffReserve = () => {
         setPage(0);
     };
 
-    const handleClear = (id) => {
-        if (window.confirm('Are you sure you want to delete?')) {
-            projectFirestore.collection('reserve').doc(id).delete();
-        }
+    const handleClear = async (id) => {
+        const confirm = await showNotification('Bạn có chắc chắn muốn xóa ?');
+        if (!confirm) return;
+        projectFirestore.collection('reserve').doc(id).delete();
+        toast({
+            title: 'Thông báo',
+            message: `Xóa thành hóa đơn ${id}`,
+            type: 'success',
+            duration: 3000
+        })
     }
 
-    const handleCheck = (id) => {
-        if (window.confirm('Are you sure you want to check?')) {
+    const handleCheck = async (id) => {
+        const confirm = await showNotification('Bạn có muốn xác nhận ?');
+        if (confirm) {
             projectFirestore.collection('reserve').doc(id).update("checked", true);
         }
+        toast({
+            title: 'Thông báo',
+            message: `Xác nhận thành công đơn ${id}`,
+            type: 'success',
+            duration: 3000
+        })
     }
 
+    
     useEffect(() => {
         projectFirestore.collection('reserve')
             .orderBy('checked', 'asc')
@@ -88,12 +104,14 @@ const StaffReserve = () => {
                                     <CheckIcon
                                         className={classes.clearIcon}
                                         onClick={() => handleCheck(doc.id)}
+                                        disabled={doc.status == 'Đã hoàn thành'}
                                     />
                                 </TableCell>
                                 <TableCell>
                                     <ClearIcon
                                         className={classes.clearIcon}
-                                        onClick={() => handleClear(doc.id)}
+                                        onClick={doc.status === 'Đã hoàn thành' ? undefined : () => handleClear(doc.id)}
+                                        style={{ color: doc.status === 'Đã hoàn thành' ? 'black' : undefined, cursor: doc.status === 'Đã hoàn thành' ? 'not-allowed' : 'pointer' }}
                                     />
                                 </TableCell>
                             </TableRow>

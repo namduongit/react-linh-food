@@ -8,6 +8,8 @@ import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import { Link as RouterLink } from 'react-router-dom';
 import { currencyFormat } from '../../utils/currencyFormat';
 import { useAuthState } from "react-firebase-hooks/auth";
+import { showNotification } from '../../services/showNotification';
+import { toast } from '../../services/toast';
 
 const Cart = () => {
     const classes = useStyles();
@@ -43,10 +45,17 @@ const Cart = () => {
         }
     }
 
-    const handleClear = (id) => {
-        if (window.confirm('Are you sure you want to delete?')) {
-            projectFirestore.collection('cart').doc(id).delete();
-        }
+    const handleClear = async (id) => {
+        const confirm = await showNotification('Bạn có chắc chắn xóa sản phẩm này ?');
+        if (!confirm) return;
+        projectFirestore.collection('menu').doc(id).delete();
+        toast({
+            title: 'Thông báo',
+            message: `Xóa sản phẩm ${id} thành công`,
+            type: 'success',
+            duration: 3000
+        });
+
     }
 
     useEffect(() => {
@@ -72,30 +81,30 @@ const Cart = () => {
 
     useEffect(() => {
         if (user != null) {
-          const userRef = projectFirestore.collection('users').where('uid', '==', user.uid);
-    
-          const getUser = async () => {
-            try {
-              const querySnapshot = await userRef.get();
-    
-              if (!querySnapshot.empty) {
-                const doc = querySnapshot.docs[0];
-                setRole(doc.data().role);
-              } else {
-                console.log("Không tìm thấy user trong Firestore");
-                setRole(null);
-              }
-            } catch (error) {
-              console.error("Lỗi khi lấy user:", error);
-              setRole(null);
-            }
-          };
-    
-          getUser();
+            const userRef = projectFirestore.collection('users').where('uid', '==', user.uid);
+
+            const getUser = async () => {
+                try {
+                    const querySnapshot = await userRef.get();
+
+                    if (!querySnapshot.empty) {
+                        const doc = querySnapshot.docs[0];
+                        setRole(doc.data().role);
+                    } else {
+                        console.log("Không tìm thấy user trong Firestore");
+                        setRole(null);
+                    }
+                } catch (error) {
+                    console.error("Lỗi khi lấy user:", error);
+                    setRole(null);
+                }
+            };
+
+            getUser();
         } else {
-          setRole(null);
+            setRole(null);
         }
-      }, [user]);
+    }, [user]);
 
     return (
         <Container className={classes.container}>

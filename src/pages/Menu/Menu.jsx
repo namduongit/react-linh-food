@@ -50,18 +50,6 @@ const Menu = () => {
             })
     }, [setDocs, category])
 
-    useEffect(() => {
-        if (category === 'side') {
-            const filterDocs = docs.filter(item => item.type.includes('khai vị'));
-            setMenu(filterDocs);
-            setCurrentPage(1);
-        } else {
-            setMenu(docs);
-            setCurrentPage(1);
-        }
-
-    }, [setMenu, docs])
-
     return (
         <Container className={classes.container}>
             <Button

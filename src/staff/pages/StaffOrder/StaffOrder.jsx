@@ -8,6 +8,8 @@ import { currencyFormat } from '../../../utils/currencyFormat'
 
 //react
 import { useState, useEffect } from 'react';
+import { showNotification } from '../../../services/showNotification';
+import { toast } from '../../../services/toast';
 
 const StaffOrder = () => {
     const classes = useStyles();
@@ -25,10 +27,16 @@ const StaffOrder = () => {
         setPage(0);
     };
 
-    const handleClear = (id) => {
-        if (window.confirm('Are you sure you want to delete?')) {
-            projectFirestore.collection('order').doc(id).delete();
-        }
+    const handleClear = async (id) => {
+        const confirm = await showNotification('Bạn có chắc chắn muốn xóa ?');
+        if (!confirm) return;
+        projectFirestore.collection('order').doc(id).delete();
+        toast({
+            title: 'Thông báo',
+            message: `Xóa thành hóa đơn ${id}`,
+            type: 'success',
+            duration: 3000
+        })
     }
 
     const handleStatus = (event, id) => {
@@ -116,6 +124,7 @@ const StaffOrder = () => {
                                             <MenuItem
                                                 key={index}
                                                 value={role}
+                                                disabled={doc.status == 'Đã hoàn thành'}
                                             >
                                                 {role}
                                             </MenuItem>
@@ -125,7 +134,7 @@ const StaffOrder = () => {
                                 <TableCell>
                                     <ClearIcon
                                         className={classes.clearIcon}
-                                        onClick={() => handleClear(doc.id)}
+                                        onClick={doc.status === 'Đã hoàn thành' ? undefined :() => handleClear(doc.id)}
                                     />
                                 </TableCell>
                             </TableRow>

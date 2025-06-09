@@ -8,6 +8,8 @@ import { currencyFormat } from '../../../utils/currencyFormat'
 
 //react
 import { useState, useEffect } from 'react';
+import { showNotification } from '../../../services/showNotification';
+import { toast } from '../../../services/toast';
 
 const DineIn = () => {
     const classes = useStyles();
@@ -25,25 +27,39 @@ const DineIn = () => {
         setPage(0);
     };
 
-    const handleClear = (id, seatID) => {
-        if (window.confirm('Are you sure you want to delete?')) {
-            projectFirestore.collection('dinein').doc(id).delete();
-            projectFirestore.collection('seat').doc(seatID).update({
-                total: 0,
-                available: true,
-            });
-        }
+    const handleClear = async (id, seatID) => {
+        const confirm = await showNotification('Bạn có chắc chắn muốn xóa hóa đơn này ?');
+        if (!confirm) return;
+        projectFirestore.collection('dinein').doc(id).delete();
+        projectFirestore.collection('seat').doc(seatID).update({
+            total: 0,
+            available: true,
+        });
+        toast({
+            title: 'Thông báo',
+            message: `Xóa thành công hóa đơn ${id}`,
+            type: 'success',
+            duration: 3000
+        })
     }
 
-    const handleStatus = (event, id, seatID) => {
+    const handleStatus = async (event, id, seatID) => {
         projectFirestore.collection('dinein').doc(id).update("status", event.target.value);
         if (event.target.value === 'Đã hoàn thành') {
-            if (window.confirm('Hoàn tất đơn hàng?')) {
+            const confirm = await showNotification('Chắc chắn hoàn tất đơn hàng?');
+            if (confirm) {
                 projectFirestore.collection('dinein').doc(id).update("checked", true)
                 projectFirestore.collection('seat').doc(seatID).update({
                     total: 0,
                     available: true,
                 })
+                toast({
+                    title: 'Thông báo',
+                    message: `Hoàn tất đơn hàng ${id} thành công`,
+                    type: 'success',
+                    duration: 3000
+                })
+
             } else {
                 projectFirestore.collection('dinein').doc(id).update({
                     checked: false,
@@ -76,6 +92,7 @@ const DineIn = () => {
                 setDocs(documents)
             })
     }, [setDocs])
+
 
     return (
         <Container>
@@ -119,10 +136,11 @@ const DineIn = () => {
                                         value={doc.status}
                                         onChange={(event) => handleStatus(event, doc.id, doc.seatID)}
                                     >
-                                        {statusArray.map((role, index) => (
+                                        {statusArray.map((role, index, status) => (
                                             <MenuItem
                                                 key={index}
                                                 value={role}
+                                                disabled={doc.status == 'Đã hoàn thành'}
                                             >
                                                 {role}
                                             </MenuItem>
@@ -132,7 +150,8 @@ const DineIn = () => {
                                 <TableCell>
                                     <ClearIcon
                                         className={classes.clearIcon}
-                                        onClick={() => handleClear(doc.id, doc.seatID)}
+                                        onClick={doc.status === 'Đã hoàn thành' ? undefined : () => handleClear(doc.id, doc.seatID)}
+                                        style={{ color: doc.status === 'Đã hoàn thành' ? 'black' : undefined, cursor: doc.status === 'Đã hoàn thành' ? 'not-allowed' : 'pointer' }}
                                     />
                                 </TableCell>
                             </TableRow>

@@ -7,6 +7,7 @@ import { projectFirestore } from '../../../firebase/config';
 import { currencyFormat } from '../../../utils/currencyFormat';
 
 import { toast } from '../../../services/toast';
+import { showNotification } from '../../../services/showNotification';
 
 const Seat = () => {
     const classes = useStyles();
@@ -16,7 +17,7 @@ const Seat = () => {
     const [seatName, setSeateName] = useState('');
     const [seatNumber, setSeatNumber] = useState(0);
 
-    const handleSeat = (available, number, id) => {
+    const handleSeat = async (available, number, id) => {
         const seatTotal = userBill.find(seat => parseInt(seat.userSeat) === number);
         if (seatTotal) {
             if (available === true) {
@@ -25,15 +26,21 @@ const Seat = () => {
                     available: false,
                 });
             } else {
-                if (window.confirm('Thanh toán đơn hàng?')) {
-                    projectFirestore.collection('seat').doc(id).update({
-                        total: 0,
-                        available: true,
-                    });
-                    projectFirestore.collection('dinein').doc(seatTotal.id).update({
-                        checked: true
-                    });
-                }
+                const confirm = await showNotification('Thanh toán đơn hàng?');
+                if (!confirm) return;
+                projectFirestore.collection('seat').doc(id).update({
+                    total: 0,
+                    available: true,
+                });
+                projectFirestore.collection('dinein').doc(seatTotal.id).update({
+                    checked: true
+                });
+                toast({
+                    title: 'Thông báo',
+                    message: `Thanh toán đơn hàng ${id} thành công`,
+                    type: 'success',
+                    duration: 3000
+                })
             }
 
         }

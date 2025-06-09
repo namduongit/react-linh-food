@@ -41,7 +41,7 @@ const Order = () => {
 
     }, [setDocs, user])
     return (
-        <Container>
+        <Container >
             <TableContainer component={Paper} className={classes.container}>
                 <MuiTable sx={{ minWidth: 650 }} >
                     <TableHead>

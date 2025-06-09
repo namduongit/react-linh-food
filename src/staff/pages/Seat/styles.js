@@ -3,7 +3,7 @@ import { makeStyles } from "@mui/styles";
 export const useStyles = makeStyles((theme) => ({
     root: {
         textAlign: 'center',
-        marginTop: '200px'
+        marginTop: '60px'
     },
     title:{
         margin: '20px 0',

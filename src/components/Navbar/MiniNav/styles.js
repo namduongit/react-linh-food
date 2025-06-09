@@ -2,7 +2,7 @@ import { makeStyles } from "@mui/styles";
 
 export const useStyles = makeStyles((theme) => ({
     root: {
-        marginTop: '130px',
+        padding: '0'
     },
     wrapper: {
         display: 'flex',

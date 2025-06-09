@@ -7,7 +7,7 @@ export const useStyles = makeStyles((theme) => ({
         height: 'auto'
     },
     navbar: {
-        padding: '30px 0',
+        padding: '30px 0 0 0',
     },
     number: {
         fontSize: '30px',

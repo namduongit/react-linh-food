@@ -26,7 +26,6 @@ const History = () => {
             projectFirestore.collection('order')
                 .where('userID', '==', user.uid)
                 .where('status', '==', 'Đã hoàn thành')
-                .orderBy('checked', 'asc')
                 .onSnapshot((snap) => {
                     let documents = [];
                     snap.forEach(doc => {
@@ -42,7 +41,7 @@ const History = () => {
     }, [setDocs, user])
     return (
         <Container>
-            <TableContainer component={Paper} className={classes.container}>
+            <TableContainer component={Paper} className={classes.container} >
                 <MuiTable sx={{ minWidth: 650 }} >
                     <TableHead>
                         <TableRow>

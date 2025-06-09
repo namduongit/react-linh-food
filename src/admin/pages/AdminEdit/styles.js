@@ -2,7 +2,6 @@ import { makeStyles } from "@mui/styles";
 
 export const useStyles = makeStyles((theme) => ({
      root: {
-        marginTop: '200px',
         border: '2px solid black',
         textAlign: 'center',
     },
