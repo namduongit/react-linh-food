@@ -1,21 +1,24 @@
 //material-ui
 import ClearIcon from '@mui/icons-material/Clear';
-import { Container, Typography, Table, TableContainer, Paper, TableBody, TableCell, TableHead, TableRow, TableFooter, TablePagination } from '@mui/material';
+import { Container, Typography, Table, TableContainer, Paper, TableBody, TableCell, TableHead, TableRow, TableFooter, TablePagination, ButtonGroup, Button } from '@mui/material';
 import { useStyles } from './styles';
+
 
 //react
 import { useState, useEffect } from 'react';
 
 //firebase
-import { projectFirestore } from '../../../../firebase/config';
-import { toast } from '../../../../services/toast';
-import { showNotification } from '../../../../services/showNotification';
+import { projectFirestore } from '../../../firebase/config';
+import { toast } from '../../../services/toast';
+import { showNotification } from '../../../services/showNotification';
 
 const Staffs = () => {
     const classes = useStyles();
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(5);
     const [docs, setDocs] = useState([]);
+
+    const [selectedRole, setSelectedRole] = useState('staff');
 
     const handleChangePage = (event, newPage) => {
         setPage(newPage);
@@ -37,27 +40,62 @@ const Staffs = () => {
         });
     }
 
+
     useEffect(() => {
-        projectFirestore.collection('users')
-            .where('role', '==','staff')
+        const unsubscribe = projectFirestore.collection('users')
+            .where('role', '==', selectedRole)
             .onSnapshot((snap) => {
                 let documents = [];
                 snap.forEach(doc => {
                     documents.push({
-                        ...doc.data(), 
+                        ...doc.data(),
+                        id: doc.id
+                    })
+                });
+                setDocs(documents)
+            });
+
+        return () => unsubscribe(); // cleanup khi unmount hoặc đổi role
+    }, [selectedRole]);
+
+
+
+    useEffect(() => {
+        projectFirestore.collection('users')
+            .where('role', '==', 'staff')
+            .onSnapshot((snap) => {
+                let documents = [];
+                snap.forEach(doc => {
+                    documents.push({
+                        ...doc.data(),
                         id: doc.id
                     })
                 });
                 setDocs(documents)
             })
-   
+
     }, [])
-  
+
     return (
         <Container>
-            <Typography variant="h3" component="h1" className={classes.title}>
-                Quản lý nhân viên
+            <Typography variant="h4" component="h1" className={classes.title}>
+                Quản lý tài khoản
             </Typography>
+            <ButtonGroup style={{ marginBottom: 16 }}>
+                <Button style={{ marginRight: 16 }}
+                    variant={selectedRole === 'staff' ? 'contained' : 'outlined'}
+                    onClick={() => setSelectedRole('staff')}
+                >
+                    Tài khoản nhân viên
+                </Button>
+                <Button
+                    variant={selectedRole === 'user' ? 'contained' : 'outlined'}
+                    onClick={() => setSelectedRole('user')}
+                >
+                    Tài khoản người dùng
+                </Button>
+            </ButtonGroup>
+
             <TableContainer component={Paper} className={classes.container}>
                 <Table sx={{ minWidth: 650 }} >
                     <TableHead>

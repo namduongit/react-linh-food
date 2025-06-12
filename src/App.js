@@ -20,11 +20,9 @@ import {
 } from "react-router-dom";
 import AdminMenu from './admin/pages/AdminMenu/AdminMenu';
 import AdminEdit from './admin/pages/AdminEdit/AdminEdit';
-import StaffOrder from './staff/pages/StaffOrder/StaffOrder';
 import AdminTotal from './admin/pages/AdminTotal/AdminTotal';
 import AdminRole from './admin/pages/AdminRole/AdminRole';
-import Users from './admin/pages/Member/Users/Users';
-import Staffs from './admin/pages/Member/Staffs/Staffs';
+import Accounts from './admin/pages/Member/Accounts';
 import Reserve from './pages/Reserve/Reserve';
 import Results from './pages/Results/Results';
 import Seat from './staff/pages/Seat/Seat';
@@ -32,9 +30,17 @@ import StaffPayment from './staff/pages/StaffPayment/StaffPayment';
 import DineIn from './staff/pages/DineIn/DineIn';
 import StaffReserve from './staff/pages/StaffReserve/StaffReserve';
 
+// Staff and management functions can be common
+import Orders from './staff/pages/Order/Orders';
 
 // Page not Found
 import NotFound from './pages/NotFound/NotFound';
+
+// Contact Page
+import Contact from './pages/Contact/Contact';
+
+// Zalo icon
+import ZaloButton from './components/Zalo/ZaloButton';
 
 import { useState, useEffect } from 'react';
 import { useAuthState } from "react-firebase-hooks/auth";
@@ -84,6 +90,7 @@ function App() {
 
             <Route exact path='/' element={<Main />} />
             <Route exact path='/menu/:category' element={<Menu />} />
+            <Route exact path='/menu/contact' element={<Contact />} />
             <Route exact path='/details/:id' element={<Details />} />
             <Route exact path='/user/order' element={<Order />} />
             <Route exact path='/user/history' element={<History />} />
@@ -101,12 +108,9 @@ function App() {
                   <Route exact path='/admin/edit-menu/:id' element={<AdminEdit />} />
                   <Route exact path='/admin/total' element={<AdminTotal />} />
                   <Route exact path='/admin/role' element={<AdminRole />} />
-                  <Route exact path='/admin/users' element={<Users />} />
-                  <Route exact path='/admin/staffs' element={<Staffs />} />
+                  <Route exact path='/admin/accounts' element={<Accounts />} />
                   <Route exact path='/admin/seat' element={<Seat />} />
                   <Route exact path='/admin/payment' element={<StaffPayment />} />
-                  <Route exact path='/admin/order' element={<StaffOrder />} />
-                  <Route exact path='/admin/dinein' element={<DineIn />} />
                   <Route exact path='/admin/reserve' element={<StaffReserve />} />
                 </>
               )
@@ -118,9 +122,19 @@ function App() {
                 <>
                   <Route exact path='/staff/seat' element={<Seat />} />
                   <Route exact path='/staff/payment' element={<StaffPayment />} />
-                  <Route exact path='/staff/order' element={<StaffOrder />} />
-                  <Route exact path='/staff/dinein' element={<DineIn />} />
                   <Route exact path='/staff/reserve' element={<StaffReserve />} />
+                </>
+              )
+            }
+
+            {/* Admin and Staff Path */}
+            {
+              role == 'staff' || role == 'admin' && (
+                <>
+                  <Route exact path='/admin/manage/orders' element={<Orders />} />
+                  <Route exact path='/staff/manage/orders' element={<Orders />} />
+                  <Route exact path='/order' element={<Orders />} />
+                  <Route exact path='/dinein' element={<DineIn />} />
                 </>
               )
             }
@@ -128,6 +142,7 @@ function App() {
             <Route path="*" element={<NotFound />} />
           </Routes>
           <Footer />
+          <ZaloButton />
         </ThemeProvider>
       </Router>
     </CartProvider>

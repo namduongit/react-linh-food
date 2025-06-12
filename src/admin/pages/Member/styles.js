@@ -2,7 +2,6 @@ import { makeStyles } from "@mui/styles";
 
 export const useStyles = makeStyles((theme) => ({
     container: {
-        marginTop: '60px',
         marginBottom: '130px'
     },
     title: {
@@ -18,5 +17,19 @@ export const useStyles = makeStyles((theme) => ({
     },
     clearIcon: {
         cursor: 'pointer'
-    }
+    },
+    switchButton: {
+    marginLeft: 8,
+    padding: '4px 8px',
+    border: 'none',
+    backgroundColor: '#1976d2',
+    color: '#fff',
+    borderRadius: 4,
+    cursor: 'pointer',
+    fontSize: 12,
+    '&:hover': {
+        backgroundColor: '#1565c0',
+    },
+}
+
 }));

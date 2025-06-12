@@ -8,7 +8,7 @@ export const useStyles = makeStyles((theme) => ({
         display: 'flex',
         flexWrap: 'wrap',
         textAlign: 'center',
-        justifyContent: 'space-between',
+        justifyContent: 'space-between'
     },
     navButton: {
         "&:hover": {

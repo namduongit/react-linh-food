@@ -149,10 +149,6 @@ export const navCategories = [
 
 export const adminItems = [
     {
-        label: 'Thêm món ăn',
-        value: 'add-menu',
-    },
-    {
         label: 'Doanh thu',
         value: 'total',
     },
@@ -161,24 +157,16 @@ export const adminItems = [
         value: 'role',
     },
     {
-        label: 'Quản lý nhân viên',
-        value: 'staffs',
-    },
-    {
-        label: 'Quản lý người dùng',
-        value: 'users',
+        label: 'Quản lý tài khoản',
+        value: 'accounts',
     },
     {
         label: 'Thực đơn',
         value: 'menu',
     },
     {
-        label: 'Đơn hàng vận chuyển',
-        value: 'order',
-    },
-    {
-        label: 'Đơn hàng tại chỗ',
-        value: 'dinein',
+        label: 'Đơn hàng',
+        value: 'manage/orders',
     },
     {
         label: 'Chỗ ngồi',
@@ -188,16 +176,16 @@ export const adminItems = [
         label: 'Khách đặt bàn',
         value: 'reserve',
     },
+    // {
+    //     label: 'Cơ sở',
+    //     value: 'facility'
+    // }
 ]
 
 export const staffItems = [
     {
-        label: 'Đơn hàng vận chuyển',
-        value: 'order',
-    },
-    {
-        label: 'Đơn hàng tại chỗ',
-        value: 'dinein',
+        label: 'Đơn hàng',
+        value: 'manage/orders',
     },
     {
         label: 'Chỗ ngồi',

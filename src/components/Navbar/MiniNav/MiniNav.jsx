@@ -8,6 +8,9 @@ import { useState, useEffect } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { projectAuth, projectFirestore } from '../../../firebase/config';
 
+import ViewSidebarIcon from '@mui/icons-material/ViewSidebar';
+import MinimizeIcon from '@mui/icons-material/Minimize';
+
 const MiniNav = () => {
     const classes = useStyles();
     const [anchorEl, setAnchorEl] = React.useState(null);
@@ -57,7 +60,7 @@ const MiniNav = () => {
             position="fixed"
             style={{ backgroundColor: '#2cbde5'}}
         >
-            <Container>
+            <Container sx={{ padding: 0 }}>
                 <Toolbar>
                     <Box className={classes.wrapper} sx={{ flexGrow: 1 }}>
                         {!(role === 'admin')
@@ -71,6 +74,7 @@ const MiniNav = () => {
                                     onClick={handleClick}
                                     style={{ color: "white", backgroundColor: "#0073a0", padding: '20px' }}
                                 >
+                                    <ViewSidebarIcon sx={{ marginRight: 2 }} />
                                     Danh mục
                                 </Button>
                                 <Menu
@@ -94,7 +98,9 @@ const MiniNav = () => {
                                                     color="inherit"
                                                     component={RouterLink} to={`/menu/${category.value}`}
                                                     className={classes.links}
+                                                    sx={{ padding: 0 }}
                                                 >
+                                                    <MinimizeIcon sx={{ marginRight: 2 }} />
                                                     {category.label}
                                                 </MaterialLink>
                                             </MenuItem>

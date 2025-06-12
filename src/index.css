@@ -10,3 +10,42 @@
 body {
   min-width: 590px;
 }
+
+.zalo-button {
+    position: fixed;
+    bottom: 40px;
+    right: 30px;
+    width: 60px;
+    height: 60px;
+    background-color: #0084ff;
+    border-radius: 50%;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: pulse 2s infinite;
+    transition: transform 0.3s;
+}
+
+.zalo-button:hover {
+    transform: scale(1.1);
+}
+
+.zalo-button img {
+    width: 32px;
+    height: 32px;
+}
+
+/* Animation rung rung */
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(0, 132, 255, 0.4);
+    }
+    70% {
+        box-shadow: 0 0 0 20px rgba(0, 132, 255, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(0, 132, 255, 0);
+    }
+}

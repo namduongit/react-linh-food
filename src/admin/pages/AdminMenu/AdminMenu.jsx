@@ -2,10 +2,11 @@
 import ClearIcon from '@mui/icons-material/Clear';
 import EditIcon from '@mui/icons-material/Edit';
 
-import { Container, Table as MuiTable, TableContainer, Paper, TableBody, TableCell, TableHead, TableRow, TableFooter, TablePagination } from '@mui/material';
+import { Container, Table as MuiTable, TableContainer, Paper, TableBody, TableCell, TableHead, TableRow, TableFooter, TablePagination, ButtonGroup, Button } from '@mui/material';
 import { useStyles } from './styles';
 import { projectFirestore } from '../../../firebase/config';
 import { currencyFormat } from '../../../utils/currencyFormat'
+
 
 //react
 import { useState, useEffect } from 'react';
@@ -63,6 +64,13 @@ const AdminMenu = () => {
 
     return (
         <Container>
+            <ButtonGroup style={{ marginBottom: 16, marginTop: 16 }}>
+                <Button
+                    onClick={() => navigate('/admin/add-menu')} // thay đổi path theo trang bạn muốn
+                >
+                    Thêm thực đơn
+                </Button>
+            </ButtonGroup>
             <TableContainer component={Paper} className={classes.container}>
                 <MuiTable sx={{ minWidth: 650 }} >
                     <TableHead>

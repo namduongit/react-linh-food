@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useStyles } from './styles';
-import { Container, Grid, Link as MaterialLink, Button, Pagination} from '@mui/material';
+import { Container, Grid, Link as MaterialLink, Button, Pagination } from '@mui/material';
 import { projectFirestore } from "../../firebase/config";
 import { useParams } from 'react-router-dom';
 import { sideTypes, seafoodTypes } from '../../constants';
@@ -22,7 +22,7 @@ const Menu = () => {
     const handlePageChange = (event, value) => {
         setCurrentPage(value);
     }
-    
+
     const handleType = (event) => {
         if (event.currentTarget.value === 'Tất cả') {
             setMenu(docs);
@@ -52,14 +52,18 @@ const Menu = () => {
 
     return (
         <Container className={classes.container}>
-            <Button
-                className={classes.filter}
-                style={{ margin: '0px 20px 30px' }}
-                variant="outlined"
-                onClick={handleType}
-            >
-                Tất cả
-            </Button>
+            {
+                category != 'contact' && (
+                    <Button
+                        className={classes.filter}
+                        style={{ margin: '0px 20px 30px' }}
+                        variant="outlined"
+                        onClick={handleType}
+                    >
+                        Tất cả
+                    </Button>
+                )
+            }
             {
                 category === 'side' && sideTypes.map(type => (
                     <Button

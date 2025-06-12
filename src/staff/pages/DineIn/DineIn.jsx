@@ -1,7 +1,7 @@
 //material-ui
 import ClearIcon from '@mui/icons-material/Clear';
 
-import { Container, Table as MuiTable, TableContainer, TextField, MenuItem, Paper, TableBody, TableCell, TableHead, TableRow, TableFooter, TablePagination, Typography, Box } from '@mui/material';
+import { Container, ButtonGroup, Button, Table as MuiTable, TableContainer, TextField, MenuItem, Paper, TableBody, TableCell, TableHead, TableRow, TableFooter, TablePagination, Typography, Box } from '@mui/material';
 import { useStyles } from './styles';
 import { projectFirestore } from '../../../firebase/config';
 import { currencyFormat } from '../../../utils/currencyFormat'
@@ -11,12 +11,18 @@ import { useState, useEffect } from 'react';
 import { showNotification } from '../../../services/showNotification';
 import { toast } from '../../../services/toast';
 
+import { useNavigate } from 'react-router-dom';
+import { useLocation, Link } from 'react-router-dom';
+
 const DineIn = () => {
     const classes = useStyles();
     const statusArray = ["Chưa xác nhận", "Đã xác nhận", "Nhà hàng đang chuẩn bị món", "Đã hoàn thành"]
     const [page, setPage] = useState(0);
     const [docs, setDocs] = useState([]);
     const [rowsPerPage, setRowsPerPage] = useState(5);
+
+    const navigate = useNavigate();
+    const location = useLocation();
 
     const handleChangePage = (event, newPage) => {
         setPage(newPage);
@@ -96,6 +102,24 @@ const DineIn = () => {
 
     return (
         <Container>
+            <ButtonGroup style={{ marginBottom: 16, marginTop: 16 }}>
+                <Button
+                    component={Link}
+                    to="/dinein"
+                    variant={location.pathname === '/dinein' ? 'contained' : 'outlined'}
+                    style={{ marginRight: 16 }}
+                >
+                    Đơn hàng tại chỗ
+                </Button>
+                <Button
+                    component={Link}
+                    to="/order"
+                    variant={location.pathname === '/order' ? 'contained' : 'outlined'}
+                >
+                    Đơn hàng vận chuyển
+                </Button>
+            </ButtonGroup>
+
             <TableContainer component={Paper} className={classes.container}>
                 <MuiTable sx={{ minWidth: 650 }} >
                     <TableHead>
