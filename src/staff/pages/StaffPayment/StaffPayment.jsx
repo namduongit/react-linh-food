@@ -19,6 +19,8 @@ const StaffPayment = () => {
     const [seats, setSeats] = useState([]);
     const [seatID, setSeatID] = useState('');
 
+    const [total, setTotal] = useState(0);
+
     const navigate = useNavigate();
     const formik = useFormik({
         initialValues: {
@@ -31,14 +33,14 @@ const StaffPayment = () => {
 
             projectFirestore.collection('seat').doc(seatID).update({
                 available: false,
-                total: localStorage.getItem('total'),
+                total: total,
                 date: new Date().toLocaleString(),
             })
             projectFirestore.collection('dinein').add({
                 seatID,
                 seat: values.seat,
                 note: localStorage.getItem('note'),
-                total: localStorage.getItem('total'),
+                total: total,
                 cart: docs,
                 status: "Chưa xác nhận",
                 checked: false,
@@ -92,18 +94,29 @@ const StaffPayment = () => {
         }
     }, [setDocs, setSeats, user]);
 
+    useEffect(() => {
+        if (user) {
+            let data = 0;
+            docs.forEach(doc => {
+                data += doc.quantity * parseInt(doc.price);
+            });
+            setTotal(data);
+        }
+    })
+
+
     return (
         <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
             <Grid container spacing={4}>
                 {/* Form chọn bàn và đặt hàng */}
                 <Grid item xs={12} md={6}>
-                    <Typography variant="h4" fontWeight="bold" gutterBottom sx={{marginBottom: '10px'}}>
+                    <Typography variant="h4" fontWeight="bold" gutterBottom sx={{ marginBottom: '10px' }}>
                         Thông tin giao hàng
                     </Typography>
 
                     <form onSubmit={formik.handleSubmit}>
                         <FormControl fullWidth>
-                            <InputLabel id="seat-label" sx={{marginBottom: '10px'}}>Chọn số bàn</InputLabel>
+                            <InputLabel id="seat-label" sx={{ marginBottom: '10px' }}>Chọn số bàn</InputLabel>
                             <Select
                                 labelId="seat-label"
                                 id="seat"
@@ -199,7 +212,7 @@ const StaffPayment = () => {
                     <Box mt={3} display="flex" justifyContent="space-between" alignItems="center">
                         <Typography variant="h5">Tổng tiền:</Typography>
                         <Typography variant="h5" fontWeight="bold" color="error">
-                            {currencyFormat(localStorage.getItem('total'))} đ
+                            {currencyFormat(total)} đ
                         </Typography>
                     </Box>
                 </Grid>

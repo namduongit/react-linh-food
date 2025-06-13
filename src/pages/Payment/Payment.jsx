@@ -24,13 +24,13 @@ const Payment = () => {
     const [districts, setDistricts] = useState([]);
     const [wards, setWards] = useState([]);
 
+    const [total, setTotal] = useState(0);
+
     // console.log(provinces);
     // console.log(districts);
 
     const navigate = useNavigate();
     const formik = useFormik({
-
-
         initialValues: {
             name: '',
             phone: '',
@@ -56,7 +56,7 @@ const Payment = () => {
                 payment: values.payment,
                 note: localStorage.getItem('note'),
                 userID: user.uid,
-                total: localStorage.getItem('total'),
+                total: total,
                 cart: docs,
                 status: "Chưa xác nhận",
                 checked: false,
@@ -68,7 +68,7 @@ const Payment = () => {
                 type: 'success',
                 duration: 3000
             });
-            localStorage.setItem('note', '');
+            localStorage.removeItem('note');
             navigate('/');
             const cart_query = projectFirestore.collection('cart').where('uid', '==', user.uid);
             cart_query.get().then((querySnapshot) => {
@@ -101,6 +101,17 @@ const Payment = () => {
                 })
         }
     }, [setDocs]);
+
+    // Xử lý tổng tiền
+    useEffect(() => {
+        if (user) {
+            let data = 0;
+            docs.forEach(doc => {
+                data += doc.quantity * parseInt(doc.price);
+            });
+            setTotal(data);
+        }
+    })
 
     // Xử lý phần quận, huyện
     useEffect(() => {
@@ -269,6 +280,22 @@ const Payment = () => {
                                         />
                                     </RadioGroup>
                                 </FormControl>
+                                {formik.values.payment === 'transfer' && (
+                                    <Box sx={{ px: 2, pb: 2, textAlign: 'center' }}>
+                                        <Typography variant="body1" sx={{ mb: 1 }}>
+                                            Quét mã QR để chuyển khoản:
+                                        </Typography>
+                                        <img
+                                            src={`https://api.toolhub.app/vietnamese/VietQR?accountNo=50066668888&accountName=NINH%20DUC%20LINH&acqId=970423%3A%20TPBank&amount=${total}&addInfo=ThanhToan-LinhSeaFood&format=text&template=compact`}
+                                            alt="QR chuyển khoản"
+                                            style={{ maxWidth: 300 }}
+                                        />
+                                        <Typography variant="caption" display="block" sx={{ mt: 1 }}>
+                                            Nội dung: <b>ThanhToan-LinhSeaFood</b>
+                                        </Typography>
+                                    </Box>
+                                )}
+
                             </CardContent>
                             <CardActions sx={{ justifyContent: 'space-between', px: 2 }}>
                                 <Button component={RouterLink} to="/cart" variant="text">
@@ -316,7 +343,7 @@ const Payment = () => {
                     <Box sx={{ mt: 3, display: 'flex', justifyContent: 'space-between' }}>
                         <Typography variant="h5">Tổng tiền:</Typography>
                         <Typography variant="h5" fontWeight="bold" color="error">
-                            {currencyFormat(localStorage.getItem('total'))} đ
+                            {currencyFormat(total)} đ
                         </Typography>
                     </Box>
                 </Grid>

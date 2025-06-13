@@ -22,7 +22,6 @@ const Cart = () => {
 
     const renderTotal = useCallback(() => {
         const total = docs.reduce((n, { price, quantity }) => n + (parseInt(price) * quantity), 0);
-        localStorage.setItem('total', total);
         setTotal(total);
     }, [docs])
 
