@@ -10,9 +10,18 @@ export const useStyles = makeStyles((theme) => ({
         justifyContent: 'center',
         margin: '20px 0'
     },
-    text : {
+    text: {
         fontSize: '22px',
         margin: '0 20px',
         fontWeight: 'bold'
-    }
+    },
+    root: {
+        paddingLeft: '20px',
+        paddingRight: '20px',
+    },
+    wrapper: {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
 }));

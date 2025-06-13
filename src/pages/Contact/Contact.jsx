@@ -33,7 +33,7 @@ const contactData = [
     },
     {
         id: 6,
-        title: 'Cơ sở 6',
+        title: 'Cơ sở 2',
         address:
             'Phong Lan 01-01, Khu Đô Thị Vinhomes Riverside The Harmony, Quận Long Biên (mặt đường Nguyễn Lam - cạnh cổng an ninh 34)',
         hotline: '0906263616 - 0363283898',
@@ -91,7 +91,7 @@ const Contact = () => {
 
 
                 <Divider sx={{ my: 4 }} />
-                <Box sx={{ py: 6, backgroundColor: '#fff' }}>
+                <Box sx={{ py: 6, backgroundColor: '#fff', padding: '20px 0' }}>
                         <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
                             Đối tác của Linh Food
                         </Typography>

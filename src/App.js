@@ -53,30 +53,16 @@ function App() {
   const [role, setRole] = useState([]);
 
   useEffect(() => {
+
     if (user != null) {
-      const userRef = projectFirestore.collection('users').where('uid', '==', user.uid);
-
-      const getUser = async () => {
-        try {
-          const querySnapshot = await userRef.get();
-
-          if (!querySnapshot.empty) {
-            const doc = querySnapshot.docs[0];
+      projectFirestore.collection('users')
+        .where('uid', '==', user.uid)
+        .onSnapshot((snap) => {
+          snap.forEach(doc => {
             setRole(doc.data().role);
-          } else {
-            console.log("Không tìm thấy user trong Firestore");
-            setRole(null);
-          }
-        } catch (error) {
-          console.error("Lỗi khi lấy user:", error);
-          setRole(null);
-        }
-      };
-
-      getUser();
-    } else {
-      setRole(null);
-    }
+          });
+        })
+    } else setRole(null)
   }, [user]);
 
 
@@ -84,65 +70,70 @@ function App() {
     <CartProvider>
       <Router>
         <ThemeProvider theme={theme}>
-          <Navbar />
-          <Routes>
-            {/* user path */}
+          <div className="app-container">
+            <Navbar />
+            <div className='main-container'>
+              <Routes>
+                {/* user path */}
 
-            <Route exact path='/' element={<Main />} />
-            <Route exact path='/menu/:category' element={<Menu />} />
-            <Route exact path='/menu/contact' element={<Contact />} />
-            <Route exact path='/details/:id' element={<Details />} />
-            <Route exact path='/user/order' element={<Order />} />
-            <Route exact path='/user/history' element={<History />} />
-            <Route exact path='/cart' element={<Cart />} />
-            <Route exact path='/payment' element={<Payment />} />
-            <Route exact path='/user/reserve' element={<Reserve />} />
-            <Route exact path='/search/:keyword' element={<Results />} />
+                <Route exact path='/' element={<Main />} />
+                <Route exact path='/menu/:category' element={<Menu />} />
+                <Route exact path='/menu/contact' element={<Contact />} />
+                <Route exact path='/details/:id' element={<Details />} />
+                <Route exact path='/user/order' element={<Order />} />
+                <Route exact path='/user/history' element={<History />} />
+                <Route exact path='/cart' element={<Cart />} />
+                <Route exact path='/payment' element={<Payment />} />
+                <Route exact path='/user/reserve' element={<Reserve />} />
+                <Route exact path='/search/:keyword' element={<Results />} />
 
-            {/* admin path */}
-            {
-              role === 'admin' && (
-                <>
-                  <Route exact path="/admin/add-menu" element={<AdminMain />} />
-                  <Route exact path='/admin/menu' element={<AdminMenu />} />
-                  <Route exact path='/admin/edit-menu/:id' element={<AdminEdit />} />
-                  <Route exact path='/admin/total' element={<AdminTotal />} />
-                  <Route exact path='/admin/role' element={<AdminRole />} />
-                  <Route exact path='/admin/accounts' element={<Accounts />} />
-                  <Route exact path='/admin/seat' element={<Seat />} />
-                  <Route exact path='/admin/payment' element={<StaffPayment />} />
-                  <Route exact path='/admin/reserve' element={<StaffReserve />} />
-                </>
-              )
-            }
+                {/* admin path */}
+                {
+                  role === 'admin' && (
+                    <>
+                      <Route exact path="/admin/add-menu" element={<AdminMain />} />
+                      <Route exact path='/admin/menu' element={<AdminMenu />} />
+                      <Route exact path='/admin/edit-menu/:id' element={<AdminEdit />} />
+                      <Route exact path='/admin/total' element={<AdminTotal />} />
+                      <Route exact path='/admin/role' element={<AdminRole />} />
+                      <Route exact path='/admin/accounts' element={<Accounts />} />
+                      <Route exact path='/admin/seat' element={<Seat />} />
+                      <Route exact path='/admin/payment' element={<StaffPayment />} />
+                      <Route exact path='/admin/reserve' element={<StaffReserve />} />
+                    </>
+                  )
+                }
 
-            {/* staff path */}
-            {
-              role === 'staff' && (
-                <>
-                  <Route exact path='/staff/seat' element={<Seat />} />
-                  <Route exact path='/staff/payment' element={<StaffPayment />} />
-                  <Route exact path='/staff/reserve' element={<StaffReserve />} />
-                </>
-              )
-            }
+                {/* staff path */}
+                {
+                  role === 'staff' && (
+                    <>
+                      <Route exact path='/staff/seat' element={<Seat />} />
+                      <Route exact path='/staff/payment' element={<StaffPayment />} />
+                      <Route exact path='/staff/reserve' element={<StaffReserve />} />
+                    </>
+                  )
+                }
 
-            {/* Admin and Staff Path */}
-            {
-              role == 'staff' || role == 'admin' && (
-                <>
-                  <Route exact path='/admin/manage/orders' element={<Orders />} />
-                  <Route exact path='/staff/manage/orders' element={<Orders />} />
-                  <Route exact path='/order' element={<Orders />} />
-                  <Route exact path='/dinein' element={<DineIn />} />
-                </>
-              )
-            }
+                {/* Admin and Staff Path */}
+                {
+                  (role === 'staff' || role === 'admin') && (
+                    <>
+                      <Route exact path='/admin/order' element={<Orders />} />
+                      <Route exact path='/staff/order' element={<Orders />} />
+                      <Route exact path='/order' element={<Orders />} />
+                      <Route exact path='/dinein' element={<DineIn />} />
+                    </>
+                  )
+                }
 
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-          <Footer />
-          <ZaloButton />
+
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </div>
+            <Footer />
+            <ZaloButton />
+          </div>
         </ThemeProvider>
       </Router>
     </CartProvider>

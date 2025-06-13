@@ -6,6 +6,12 @@ import { useStyles } from './styles';
 import { projectFirestore } from '../../../firebase/config';
 import { currencyFormat } from '../../../utils/currencyFormat'
 
+import {
+    Dialog, DialogTitle, DialogContent,
+    DialogActions
+
+} from '@mui/material';
+
 //react
 import { useState, useEffect } from 'react';
 import { showNotification } from '../../../services/showNotification';
@@ -23,6 +29,15 @@ const DineIn = () => {
 
     const navigate = useNavigate();
     const location = useLocation();
+
+    const [openDineInDialog, setOpenDineInDialog] = useState(false);
+    const [selectedDineInOrder, setSelectedDineInOrder] = useState(null);
+
+    const handleOpenDineInDialog = (order) => {
+        setSelectedDineInOrder(order);
+        setOpenDineInDialog(true);
+    };
+    const handleCloseDineInDialog = () => setOpenDineInDialog(false);
 
     const handleChangePage = (event, newPage) => {
         setPage(newPage);
@@ -101,81 +116,129 @@ const DineIn = () => {
 
 
     return (
-        <Container>
-            <ButtonGroup style={{ marginBottom: 16, marginTop: 16 }}>
+        <Container sx={{ mb: 6 }}>
+            <Typography variant="h4" fontWeight="bold" gutterBottom>
+                Quản lý đơn hàng
+            </Typography>
+
+            <ButtonGroup sx={{ my: 2 }}>
                 <Button
                     component={Link}
                     to="/dinein"
-                    variant={location.pathname === '/dinein' ? 'contained' : 'outlined'}
-                    style={{ marginRight: 16 }}
+                    variant={
+                        location.pathname === '/dinein' ||
+                            location.pathname === '/admin/dinein' ||
+                            location.pathname === '/staff/dinein'
+                            ? 'contained'
+                            : 'outlined'
+                    }
                 >
                     Đơn hàng tại chỗ
                 </Button>
                 <Button
                     component={Link}
                     to="/order"
-                    variant={location.pathname === '/order' ? 'contained' : 'outlined'}
+                    variant={
+                        location.pathname === '/order' ||
+                            location.pathname === '/admin/order' ||
+                            location.pathname === '/staff/order'
+                            ? 'contained'
+                            : 'outlined'
+                    }
                 >
                     Đơn hàng vận chuyển
                 </Button>
             </ButtonGroup>
 
-            <TableContainer component={Paper} className={classes.container}>
-                <MuiTable sx={{ minWidth: 650 }} >
+            <TableContainer component={Paper} elevation={3}>
+                <MuiTable sx={{ minWidth: 650 }}>
                     <TableHead>
-                        <TableRow>
-                            <TableCell className={classes.tableHeader} align="center">Số bàn</TableCell>
-                            <TableCell className={classes.tableHeader} align="center">Thời gian</TableCell>
-                            <TableCell className={classes.tableHeader} align="center">Chi tiết đơn hàng</TableCell>
-                            <TableCell className={classes.tableHeader} align="center">Ghi chú</TableCell>
-                            <TableCell className={classes.tableHeader} align="center">Tổng tiền</TableCell>
-                            <TableCell className={classes.tableHeader} align="center">Trạng thái</TableCell>
-                            <TableCell className={classes.tableHeader} align="center">Xóa</TableCell>
+                        <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
+                            {[
+                                'Số bàn',
+                                'Thời gian',
+                                'Ghi chú',
+                                'Tổng tiền',
+                                'Trạng thái',
+                                'Thông tin',
+                                'Xóa',
+                            ].map((header, i) => (
+                                <TableCell key={i} align="center" sx={{ fontWeight: 'bold' }}>
+                                    {header}
+                                </TableCell>
+                            ))}
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {docs && (rowsPerPage > 0
+                        {(rowsPerPage > 0
                             ? docs.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                             : docs
                         ).map((doc) => (
                             <TableRow
                                 key={doc.id}
-                                className={doc.checked ? classes.rowDone : null}
+                                sx={{
+                                    backgroundColor: doc.checked ? '#e8f5e9' : 'white',
+                                    '&:hover': { backgroundColor: '#f9f9f9' },
+                                }}
                             >
                                 <TableCell align="center">{doc.seat}</TableCell>
                                 <TableCell align="center">{doc.date}</TableCell>
-                                <TableCell>
-                                    {doc.cart.map(cart => (
-                                        <Box key={cart.id}>
-                                            <Typography style={{ fontWeight: 'bold' }}>{cart.name}</Typography>
-                                            <Typography>Số lượng: {cart.quantity}</Typography>
-                                        </Box>
-                                    ))}
+                                <TableCell align="center">
+                                    {doc.note || 'Không có ghi chú'}
                                 </TableCell>
-                                <TableCell align="center">{doc.note ? doc.note : 'Không có ghi chú'}</TableCell>
-                                <TableCell align="center">{currencyFormat(doc.total)}</TableCell>
+                                <TableCell align="center">
+                                    {currencyFormat(doc.total)}
+                                </TableCell>
                                 <TableCell align="center">
                                     <TextField
                                         select
+                                        size="small"
                                         value={doc.status}
-                                        onChange={(event) => handleStatus(event, doc.id, doc.seatID)}
+                                        onChange={(event) =>
+                                            handleStatus(event, doc.id, doc.seatID)
+                                        }
+                                        sx={{ minWidth: 180 }}
                                     >
-                                        {statusArray.map((role, index, status) => (
+                                        {statusArray.map((status, idx) => (
                                             <MenuItem
-                                                key={index}
-                                                value={role}
-                                                disabled={doc.status == 'Đã hoàn thành'}
+                                                key={idx}
+                                                value={status}
+                                                disabled={doc.status === 'Đã hoàn thành'}
                                             >
-                                                {role}
+                                                {status}
                                             </MenuItem>
                                         ))}
                                     </TextField>
                                 </TableCell>
-                                <TableCell>
+                                <TableCell align="center">
+                                    <Button
+                                        variant="outlined"
+                                        size="small"
+                                        onClick={() => handleOpenDineInDialog(doc)}
+                                    >
+                                        Chi tiết
+                                    </Button>
+                                </TableCell>
+                                <TableCell align="center">
                                     <ClearIcon
-                                        className={classes.clearIcon}
-                                        onClick={doc.status === 'Đã hoàn thành' ? undefined : () => handleClear(doc.id, doc.seatID)}
-                                        style={{ color: doc.status === 'Đã hoàn thành' ? 'black' : undefined, cursor: doc.status === 'Đã hoàn thành' ? 'not-allowed' : 'pointer' }}
+                                        sx={{
+                                            color:
+                                                doc.status === 'Đã hoàn thành' ? '#ccc' : '#f44336',
+                                            cursor:
+                                                doc.status === 'Đã hoàn thành'
+                                                    ? 'not-allowed'
+                                                    : 'pointer',
+                                            transition: '0.2s',
+                                            '&:hover': {
+                                                transform:
+                                                    doc.status === 'Đã hoàn thành' ? 'none' : 'scale(1.2)',
+                                            },
+                                        }}
+                                        onClick={
+                                            doc.status === 'Đã hoàn thành'
+                                                ? undefined
+                                                : () => handleClear(doc.id, doc.seatID)
+                                        }
                                     />
                                 </TableCell>
                             </TableRow>
@@ -195,8 +258,35 @@ const DineIn = () => {
                     </TableFooter>
                 </MuiTable>
             </TableContainer>
+
+            <Dialog open={openDineInDialog} onClose={handleCloseDineInDialog} fullWidth maxWidth="sm">
+                <DialogTitle>Chi tiết hóa đơn tại chỗ</DialogTitle>
+                <DialogContent dividers>
+                    {selectedDineInOrder ? (
+                        <>
+                            <Typography><strong>ID:</strong> {selectedDineInOrder.id}</Typography>
+                            <Typography><strong>Ngày:</strong> {selectedDineInOrder.date}</Typography>
+                            <Typography><strong>Tổng:</strong> {currencyFormat(selectedDineInOrder.total)} đ</Typography>
+                            <Typography sx={{ mt: 2 }}><strong>Chi tiết món:</strong></Typography>
+                            <ul style={{ paddingLeft: 16 }}>
+                                {selectedDineInOrder.cart?.map((item, i) => (
+                                    <li key={i}>
+                                        {(item.name || item.subtitle || 'Món không rõ')} - {item.quantity} x {currencyFormat(item.price)} đ
+                                    </li>
+                                ))}
+                            </ul>
+                        </>
+                    ) : (
+                        <Typography>Không có dữ liệu</Typography>
+                    )}
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleCloseDineInDialog}>Đóng</Button>
+                </DialogActions>
+            </Dialog>
         </Container>
-    )
+    );
+
 }
 
 export default DineIn

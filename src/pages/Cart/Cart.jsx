@@ -107,121 +107,99 @@ const Cart = () => {
     }, [user]);
 
     return (
-        <Container className={classes.container}>
-            <Typography variant='h4' style={{ textTransform: 'uppercase' }}>
-                Giỏ hàng
+        <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+            <Typography variant="h4" textAlign="center" fontWeight="bold" mb={4}>
+                Giỏ hàng của bạn
             </Typography>
-            <Grid container spacing={2} justifyContent="center">
-                <Grid item md={8}>
-                    {docs.map(cart => (
-                        <Card
-                            key={cart.id}
-                            sx={{
-                                display: 'flex',
-                                margin: '20px 0',
-                                position: 'relative',
-                            }}
-                        >
-                            <CardMedia
-                                component="img"
-                                image={cart.image}
-                                style={{ width: 151 }}
-                            />
-                            <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-                                <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-                                    <CardContent>
-                                        <Typography sx={{ width: "370px" }}>
-                                            {cart.name}
-                                        </Typography>
-                                        <Typography>
-                                            {currencyFormat(cart.price)}/{cart.unit}
+
+            <Grid container spacing={3}>
+                {/* Danh sách món ăn trong giỏ */}
+                <Grid item xs={12} md={8}>
+                    {docs.length === 0 ? (
+                        <Typography variant="body1">Chưa có món nào trong giỏ hàng.</Typography>
+                    ) : (
+                        docs.map((cart) => (
+                            <Card key={cart.id} sx={{ display: 'flex', mb: 3, boxShadow: 3 }}>
+                                <CardMedia
+                                    component="img"
+                                    sx={{ width: 140 }}
+                                    image={cart.image}
+                                    alt={cart.name}
+                                />
+                                <Box sx={{ display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
+                                    <CardContent sx={{ pb: 1 }}>
+                                        <Typography variant="h6" noWrap>{cart.name}</Typography>
+                                        <Typography variant="body2" color="text.secondary">
+                                            {currencyFormat(cart.price)} / {cart.unit}
                                         </Typography>
                                     </CardContent>
+
+                                    <Box sx={{ display: 'flex', alignItems: 'center', pl: 2, pb: 2 }}>
+                                        <IconButton onClick={() => decrease(cart.id, cart.quantity)} color="error">
+                                            <RemoveIcon />
+                                        </IconButton>
+                                        <Typography sx={{ mx: 2 }}>{cart.quantity}</Typography>
+                                        <IconButton onClick={() => increase(cart.id, cart.quantity)} color="primary">
+                                            <AddIcon />
+                                        </IconButton>
+                                    </Box>
                                 </Box>
-                                <Box sx={{ ml: 2, mb: 1 }} className={classes.quantity}>
-                                    <IconButton
-                                        color="secondary"
-                                        className={classes.quantityButton}
-                                        onClick={() => decrease(cart.id, cart.quantity)}
-                                    >
-                                        <RemoveIcon />
+                                <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                                    <IconButton color="error" onClick={() => handleClear(cart.id)}>
+                                        <DeleteForeverIcon />
                                     </IconButton>
-                                    <Typography className={classes.cartQuantity}>
-                                        {cart.quantity}
+                                    <Typography variant="subtitle1" fontWeight="bold" sx={{ mt: 'auto' }}>
+                                        {currencyFormat(cart.price * cart.quantity)} đ
                                     </Typography>
-                                    <IconButton
-                                        color="primary"
-                                        className={classes.quantityButton}
-                                        onClick={() => increase(cart.id, cart.quantity)}
-                                    >
-                                        <AddIcon />
-                                    </IconButton>
                                 </Box>
-                                <IconButton style={{ position: 'absolute', top: 10, right: 10 }} onClick={() => handleClear(cart.id)} >
-                                    <DeleteForeverIcon style={{ fontSize: '30px' }} />
-                                </IconButton>
-                                <Typography style={{ position: 'absolute', bottom: 10, right: 20 }}>
-                                    {currencyFormat(cart.price * cart.quantity)} đ
-                                </Typography>
-                            </Box>
-                        </Card>
-                    ))}
+                            </Card>
+                        ))
+                    )}
                 </Grid>
-                <Grid item md={4}>
-                    <Card style={{ margin: '20px 0' }}>
-                        <CardContent>
-                            <Typography style={{ marginBottom: '10px' }}>
-                                Ghi chú
+
+                {/* Thông tin ghi chú & tổng */}
+                <Grid item xs={12} md={4}>
+                    <Card sx={{ p: 3, boxShadow: 4 }}>
+                        <Typography variant="h6" gutterBottom>
+                            Ghi chú cho đơn hàng
+                        </Typography>
+                        <TextareaAutosize
+                            minRows={4}
+                            placeholder="Ví dụ: Giao sau 17h, không cay..."
+                            style={{ width: '100%', padding: '10px', borderRadius: '8px', borderColor: '#ccc' }}
+                            value={note}
+                            onChange={handleNote}
+                        />
+
+                        <Box mt={3} mb={2}>
+                            <Typography variant="subtitle1" color="text.secondary">
+                                Tổng tiền:
                             </Typography>
-                            <TextareaAutosize
-                                minRows={5}
-                                placeholder="Ghi chú cho đơn hàng của bạn"
-                                style={{ width: '100%', resize: 'none', marginBottom: '20px', padding: '20px 10px' }}
-                                value={note}
-                                onChange={handleNote}
-                            />
-                            <hr />
-                            <Typography style={{ margin: '10px 0', color: 'red' }}>
-                                Tổng tiền: {currencyFormat(total)} đ
+                            <Typography variant="h5" color="error" fontWeight="bold">
+                                {currencyFormat(total)} đ
                             </Typography>
-                            <hr />
-                            <Typography>
-                                Nhân Viên DVKH sẽ xác nhận lại đơn hàng của Bạn trước khi giao hàng.
-                            </Typography>
-                        </CardContent>
-                        <CardActions style={{ justifyContent: 'center' }}>
-                            <Button
-                                variant="contained"
-                                color="warning"
-                                style={{ marginBottom: '10px' }}
-                            >
-                                {role === 'user' &&
-                                    <MaterialLink
-                                        underline="none"
-                                        color="inherit"
-                                        component={RouterLink} to={'/payment'}
-                                        className={classes.links}
-                                    >
-                                        Tiến hành đặt hàng
-                                    </MaterialLink>
-                                }
-                                {role === 'staff' &&
-                                    <MaterialLink
-                                        underline="none"
-                                        color="inherit"
-                                        component={RouterLink} to={'/staff/payment'}
-                                        className={classes.links}
-                                    >
-                                        Tiến hành đặt hàng
-                                    </MaterialLink>
-                                }
-                            </Button>
-                        </CardActions>
+                        </Box>
+
+                        <Typography variant="body2" color="text.secondary" mb={2}>
+                            Nhân viên DVKH sẽ liên hệ để xác nhận đơn hàng trước khi giao.
+                        </Typography>
+
+                        <Button
+                            fullWidth
+                            variant="contained"
+                            color="warning"
+                            sx={{ fontWeight: 'bold', py: 1.5 }}
+                            component={RouterLink}
+                            to={role === 'staff' ? '/staff/payment' : '/payment'}
+                            disabled={docs.length === 0}
+                        >
+                            Tiến hành đặt hàng
+                        </Button>
                     </Card>
                 </Grid>
             </Grid>
         </Container>
-    )
+    );
 }
 
 export default Cart

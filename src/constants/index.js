@@ -166,7 +166,7 @@ export const adminItems = [
     },
     {
         label: 'Đơn hàng',
-        value: 'manage/orders',
+        value: 'order',
     },
     {
         label: 'Chỗ ngồi',
@@ -185,7 +185,7 @@ export const adminItems = [
 export const staffItems = [
     {
         label: 'Đơn hàng',
-        value: 'manage/orders',
+        value: 'order',
     },
     {
         label: 'Chỗ ngồi',

@@ -1,13 +1,11 @@
-//material-ui
 import ClearIcon from '@mui/icons-material/Clear';
-import { Container, Typography, Table, TableContainer, Paper, TableBody, TableCell, TableHead, TableRow, TableFooter, TablePagination, ButtonGroup, Button } from '@mui/material';
+import {
+    Container, Typography, Table, TableContainer, Paper,
+    TableBody, TableCell, TableHead, TableRow, TableFooter,
+    TablePagination, ButtonGroup, Button, IconButton
+} from '@mui/material';
 import { useStyles } from './styles';
-
-
-//react
 import { useState, useEffect } from 'react';
-
-//firebase
 import { projectFirestore } from '../../../firebase/config';
 import { toast } from '../../../services/toast';
 import { showNotification } from '../../../services/showNotification';
@@ -17,7 +15,6 @@ const Staffs = () => {
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(5);
     const [docs, setDocs] = useState([]);
-
     const [selectedRole, setSelectedRole] = useState('staff');
 
     const handleChangePage = (event, newPage) => {
@@ -30,16 +27,26 @@ const Staffs = () => {
     };
 
     const handleClear = async (id) => {
-        const confirm = await showNotification('Bạn có chắc xóa nhân viên này không ?');
+        const confirm = await showNotification('Bạn có chắc xóa nhân viên này không?');
         if (!confirm) return;
-        toast({
-            title: 'Thông báo',
-            message: 'Xóa thành công nhân viên',
-            type: 'success',
-            duration: 3000
-        });
-    }
 
+        try {
+            await projectFirestore.collection('users').doc(id).delete();
+            toast({
+                title: 'Thông báo',
+                message: 'Xóa thành công nhân viên',
+                type: 'success',
+                duration: 3000
+            });
+        } catch (error) {
+            toast({
+                title: 'Lỗi',
+                message: 'Không thể xóa nhân viên',
+                type: 'error',
+                duration: 3000
+            });
+        }
+    };
 
     useEffect(() => {
         const unsubscribe = projectFirestore.collection('users')
@@ -47,42 +54,22 @@ const Staffs = () => {
             .onSnapshot((snap) => {
                 let documents = [];
                 snap.forEach(doc => {
-                    documents.push({
-                        ...doc.data(),
-                        id: doc.id
-                    })
+                    documents.push({ ...doc.data(), id: doc.id });
                 });
-                setDocs(documents)
+                setDocs(documents);
             });
 
-        return () => unsubscribe(); // cleanup khi unmount hoặc đổi role
+        return () => unsubscribe();
     }, [selectedRole]);
-
-
-
-    useEffect(() => {
-        projectFirestore.collection('users')
-            .where('role', '==', 'staff')
-            .onSnapshot((snap) => {
-                let documents = [];
-                snap.forEach(doc => {
-                    documents.push({
-                        ...doc.data(),
-                        id: doc.id
-                    })
-                });
-                setDocs(documents)
-            })
-
-    }, [])
 
     return (
         <Container>
-            <Typography variant="h4" component="h1" className={classes.title}>
+            <Typography variant="h4" fontWeight="bold" gutterBottom>
                 Quản lý tài khoản
             </Typography>
-            <ButtonGroup style={{ marginBottom: 16 }}>
-                <Button style={{ marginRight: 16 }}
+
+            <ButtonGroup sx={{ mb: 2 }}>
+                <Button
                     variant={selectedRole === 'staff' ? 'contained' : 'outlined'}
                     onClick={() => setSelectedRole('staff')}
                 >
@@ -97,29 +84,31 @@ const Staffs = () => {
             </ButtonGroup>
 
             <TableContainer component={Paper} className={classes.container}>
-                <Table sx={{ minWidth: 650 }} >
-                    <TableHead>
+                <Table>
+                    <TableHead sx={{ backgroundColor: '#f5f5f5' }}>
                         <TableRow>
-                            <TableCell className={classes.tableHeader} align="center">ID</TableCell>
-                            <TableCell className={classes.tableHeader} align="center">Name</TableCell>
-                            <TableCell className={classes.tableHeader} align="center">Email</TableCell>
-                            <TableCell className={classes.tableHeader} align="center">Action</TableCell>
+                            <TableCell align="center"><strong>ID</strong></TableCell>
+                            <TableCell align="center"><strong>Tên</strong></TableCell>
+                            <TableCell align="center"><strong>Email</strong></TableCell>
+                            <TableCell align="center"><strong>Hành động</strong></TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {docs && (rowsPerPage > 0
+                        {(rowsPerPage > 0
                             ? docs.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                             : docs
                         ).map((doc) => (
-                            <TableRow key={doc.id}>
+                            <TableRow key={doc.id} hover>
                                 <TableCell align="center">{doc.uid}</TableCell>
                                 <TableCell align="center">{doc.name}</TableCell>
                                 <TableCell align="center">{doc.email}</TableCell>
                                 <TableCell align="center">
-                                    <ClearIcon
-                                        className={classes.clearIcon}
+                                    <IconButton
+                                        color="error"
                                         onClick={() => handleClear(doc.id)}
-                                    />
+                                    >
+                                        <ClearIcon />
+                                    </IconButton>
                                 </TableCell>
                             </TableRow>
                         ))}
@@ -139,7 +128,7 @@ const Staffs = () => {
                 </Table>
             </TableContainer>
         </Container>
-    )
-}
+    );
+};
 
-export default Staffs
+export default Staffs;

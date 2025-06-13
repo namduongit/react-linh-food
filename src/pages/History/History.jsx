@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useStyles } from './styles';
 import { projectFirestore, projectAuth } from '../../firebase/config';
-import { Container, Table as MuiTable, TableContainer, TextField, MenuItem, Paper, TableBody, TableCell, TableHead, TableRow, TableFooter, TablePagination, Typography, Box } from '@mui/material';
+import { Container, Table as MuiTable, Button, Dialog, DialogTitle, DialogContent, DialogActions, TableContainer, TextField, MenuItem, Paper, TableBody, TableCell, TableHead, TableRow, TableFooter, TablePagination, Typography, Box } from '@mui/material';
 import { currencyFormat } from '../../utils/currencyFormat'
 import { useAuthState } from "react-firebase-hooks/auth";
 
@@ -11,6 +11,21 @@ const History = () => {
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(5);
     const [user] = useAuthState(projectAuth);
+
+    // Chi tiết đơn hàng (lịch sử)
+    const [openDialog, setOpenDialog] = useState(false);
+    const [selectedOrder, setSelectedOrder] = useState(null);
+
+    const handleOpenDialog = (order) => {
+        setSelectedOrder(order);
+        setOpenDialog(true);
+        console.log(order)
+    };
+
+    const handleCloseDialog = () => {
+        setOpenDialog(false);
+        setSelectedOrder(null);
+    }
 
     const handleChangePage = (event, newPage) => {
         setPage(newPage);
@@ -40,44 +55,67 @@ const History = () => {
 
     }, [setDocs, user])
     return (
-        <Container>
-            <TableContainer component={Paper} className={classes.container} >
-                <MuiTable sx={{ minWidth: 650 }} >
+        <Container sx={{ py: 6 }}>
+            <Typography variant="h4" fontWeight="bold" gutterBottom>
+                Lịch sử mua hàng
+            </Typography>
+            <Typography variant="body2" sx={{ mb: 4, color: 'text.secondary' }}>
+                Danh sách các đơn hàng đã hoàn tất của bạn
+            </Typography>
+
+            <TableContainer component={Paper} sx={{ borderRadius: 3, boxShadow: 3 }}>
+                <MuiTable sx={{ minWidth: 650 }}>
                     <TableHead>
-                        <TableRow>
-                            <TableCell className={classes.tableHeader} align="center">Tên</TableCell>
-                            <TableCell className={classes.tableHeader} align="center">Số điện thoại</TableCell>
-                            <TableCell className={classes.tableHeader} align="center">Chi tiết đơn hàng</TableCell>
-                            <TableCell className={classes.tableHeader} align="center">Địa chỉ</TableCell>
-                            <TableCell className={classes.tableHeader} align="center">Ghi chú</TableCell>
-                            <TableCell className={classes.tableHeader} align="center">Tổng tiền</TableCell>
-                            <TableCell className={classes.tableHeader} align="center">Tình trạng</TableCell>
+                        <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
+                            <TableCell align="center"><strong>Tên</strong></TableCell>
+                            <TableCell align="center"><strong>SĐT</strong></TableCell>
+                            <TableCell align="center"><strong>Địa chỉ</strong></TableCell>
+                            <TableCell align="center"><strong>Ghi chú</strong></TableCell>
+                            <TableCell align="center"><strong>Tổng tiền</strong></TableCell>
+                            <TableCell align="center"><strong>Trạng thái</strong></TableCell>
+                            <TableCell align="center"><strong>Chi tiết</strong></TableCell>
                         </TableRow>
                     </TableHead>
-                    <TableBody>
-                        {docs && (rowsPerPage > 0
-                            ? docs.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                            : docs
-                        ).map((doc) => (
-                            <TableRow key={doc.id} >
-                                <TableCell align="center">{doc.name}</TableCell>
-                                <TableCell align="center">{doc.phone}</TableCell>
 
-                                <TableCell>
-                                    {doc.cart.map(cart => (
-                                        <Box key={cart.id}>
-                                            <Typography style={{ fontWeight: 'bold' }}>{cart.name}</Typography>
-                                            <Typography>Số lượng: {cart.quantity}</Typography>
-                                        </Box>
-                                    ))}
+                    <TableBody>
+                        {docs.length > 0 ? (
+                            (rowsPerPage > 0
+                                ? docs.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                                : docs
+                            ).map((doc) => (
+                                <TableRow key={doc.id}>
+                                    <TableCell align="center">{doc.name}</TableCell>
+                                    <TableCell align="center">{doc.phone}</TableCell>
+                                    <TableCell align="center">
+                                        {doc.address}/{doc.ward}/{doc.district}/{doc.province}
+                                    </TableCell>
+                                    <TableCell align="center">
+                                        {doc.note || 'Không có ghi chú'}
+                                    </TableCell>
+                                    <TableCell align="center" sx={{ color: 'green' }}>
+                                        {currencyFormat(doc.total)}
+                                    </TableCell>
+                                    <TableCell align="center">
+                                        <Typography sx={{ fontWeight: 'bold', color: 'green' }}>
+                                            {doc.status}
+                                        </Typography>
+                                    </TableCell>
+                                    <TableCell align="center">
+                                        <Button size="small" onClick={() => handleOpenDialog(doc)}>
+                                            Xem
+                                        </Button>
+                                    </TableCell>
+                                </TableRow>
+                            ))
+                        ) : (
+                            <TableRow>
+                                <TableCell colSpan={7} align="center">
+                                    <Typography>Không có đơn hàng nào đã hoàn tất</Typography>
                                 </TableCell>
-                                <TableCell align="center">{doc.address}/{doc.ward}/{doc.district}/{doc.province}</TableCell>
-                                <TableCell align="center">{doc.note ? doc.note : 'Không có ghi chú'}</TableCell>
-                                <TableCell align="center">{currencyFormat(doc.total)}</TableCell>
-                                <TableCell align="center">{doc.status}</TableCell>
                             </TableRow>
-                        ))}
+                        )}
                     </TableBody>
+
                     <TableFooter>
                         <TableRow>
                             <TablePagination
@@ -92,8 +130,39 @@ const History = () => {
                     </TableFooter>
                 </MuiTable>
             </TableContainer>
+
+            {/* Dialog chi tiết hóa đơn */}
+            <Dialog open={openDialog} onClose={handleCloseDialog} fullWidth maxWidth="sm">
+                <DialogTitle fontWeight="bold">Chi tiết đơn hàng</DialogTitle>
+                <DialogContent dividers sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    {selectedOrder ? (
+                        <>
+                            <Typography><strong>ID đơn hàng:</strong> {selectedOrder.id}</Typography>
+                            <Typography><strong>Ngày đặt:</strong> {selectedOrder.date}</Typography>
+                            <Typography><strong>Tổng tiền:</strong> {currencyFormat(selectedOrder.total)} đ</Typography>
+
+                            <Typography><strong>Món đã đặt:</strong></Typography>
+                            <Box component="ul" sx={{ pl: 2 }}>
+                                {selectedOrder.cart.map((item, index) => (
+                                    <li key={index}>
+                                        {item.name} - {item.quantity} x {currencyFormat(item.price)} đ
+                                    </li>
+                                ))}
+                            </Box>
+                        </>
+                    ) : (
+                        <Typography>Không có dữ liệu</Typography>
+                    )}
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleCloseDialog} variant="contained" color="primary">
+                        Đóng
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </Container>
-    )
+    );
+
 }
 
 export default History

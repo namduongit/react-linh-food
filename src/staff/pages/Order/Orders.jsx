@@ -2,6 +2,12 @@
 import ClearIcon from '@mui/icons-material/Clear';
 
 import { Container, Button, Table as MuiTable, TableContainer, TextField, MenuItem, Paper, TableBody, TableCell, TableHead, TableRow, TableFooter, TablePagination, Typography, Box, ButtonGroup } from '@mui/material';
+import {
+    Dialog, DialogTitle, DialogContent,
+    DialogActions
+
+} from '@mui/material';
+
 import { useStyles } from './styles';
 import { projectFirestore } from '../../../firebase/config';
 import { currencyFormat } from '../../../utils/currencyFormat'
@@ -23,6 +29,15 @@ const StaffOrder = () => {
 
     const navigate = useNavigate();
     const location = useLocation();
+
+    const [openDialog, setOpenDialog] = useState(false);
+    const [selectedOrder, setSelectedOrder] = useState(null);
+
+    const handleOpenDialog = (order) => {
+        setSelectedOrder(order);
+        setOpenDialog(true);
+    };
+    const handleCloseDialog = () => setOpenDialog(false);
 
     const handleChangePage = (event, newPage) => {
         setPage(newPage);
@@ -81,85 +96,94 @@ const StaffOrder = () => {
     }, [setDocs])
 
     return (
-        <Container>
-            <ButtonGroup style={{ marginBottom: 16, marginTop: 16 }}>
+        <Container sx={{ mb: 6 }}>
+            <Typography variant="h4" fontWeight="bold" gutterBottom>
+                Quản lý đơn hàng
+            </Typography>
+
+            <ButtonGroup sx={{ mb: 2 }}>
                 <Button
                     component={Link}
                     to="/dinein"
-                    variant={location.pathname === '/dinein' ? 'contained' : 'outlined'}
-                    style={{ marginRight: 16 }}
+                    variant={location.pathname.includes('dinein') ? 'contained' : 'outlined'}
                 >
                     Đơn hàng tại chỗ
                 </Button>
                 <Button
                     component={Link}
                     to="/order"
-                    variant={location.pathname === '/order' ? 'contained' : 'outlined'}
+                    variant={location.pathname.includes('order') ? 'contained' : 'outlined'}
                 >
                     Đơn hàng vận chuyển
                 </Button>
             </ButtonGroup>
 
-
-
-            <TableContainer component={Paper} className={classes.container}>
-                <MuiTable sx={{ minWidth: 650 }} >
+            <TableContainer component={Paper} elevation={3}>
+                <MuiTable sx={{ minWidth: 650 }}>
                     <TableHead>
-                        <TableRow>
-                            <TableCell className={classes.tableHeader} align="center">Tên</TableCell>
-                            <TableCell className={classes.tableHeader} align="center">Số điện thoại</TableCell>
-                            <TableCell className={classes.tableHeader} align="center">Thời gian</TableCell>
-                            <TableCell className={classes.tableHeader} align="center">Chi tiết đơn hàng</TableCell>
-                            <TableCell className={classes.tableHeader} align="center">Địa chỉ</TableCell>
-                            <TableCell className={classes.tableHeader} align="center">Ghi chú</TableCell>
-                            <TableCell className={classes.tableHeader} align="center">Tổng tiền</TableCell>
-                            <TableCell className={classes.tableHeader} align="center">Trạng thái</TableCell>
-                            <TableCell className={classes.tableHeader} align="center">Xóa</TableCell>
+                        <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
+                            {["Tên", "Số ĐT", "Thời gian", "Địa chỉ", "Ghi chú", "Tổng tiền", "Trạng thái", "Chi tiết", "Xóa"].map((title, i) => (
+                                <TableCell key={i} align="center" sx={{ fontWeight: 'bold' }}>
+                                    {title}
+                                </TableCell>
+                            ))}
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {docs && (rowsPerPage > 0
-                            ? docs.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                            : docs
-                        ).map((doc) => (
+                        {(rowsPerPage > 0 ? docs.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage) : docs).map((doc) => (
                             <TableRow
                                 key={doc.id}
-                                className={doc.checked ? classes.rowDone : null}
+                                sx={{
+                                    backgroundColor: doc.checked ? '#e8f5e9' : 'white',
+                                    '&:hover': { backgroundColor: '#f9f9f9' }
+                                }}
                             >
                                 <TableCell align="center">{doc.name}</TableCell>
                                 <TableCell align="center">{doc.phone}</TableCell>
                                 <TableCell align="center">{doc.date}</TableCell>
-                                <TableCell>
-                                    {doc.cart.map(cart => (
-                                        <Box key={cart.id}>
-                                            <Typography style={{ fontWeight: 'bold' }}>{cart.name}</Typography>
-                                            <Typography>Số lượng: {cart.quantity}</Typography>
-                                        </Box>
-                                    ))}
+                                <TableCell align="center">
+                                    {doc.address}/{doc.ward}/{doc.district}/{doc.province}
                                 </TableCell>
-                                <TableCell align="center">{doc.address}/{doc.ward}/{doc.district}/{doc.province}</TableCell>
-                                <TableCell align="center">{doc.note ? doc.note : 'Không có ghi chú'}</TableCell>
+                                <TableCell align="center">{doc.note || 'Không có ghi chú'}</TableCell>
                                 <TableCell align="center">{currencyFormat(doc.total)}</TableCell>
                                 <TableCell align="center">
                                     <TextField
                                         select
+                                        size="small"
                                         value={doc.status}
                                         onChange={(event) => handleStatus(event, doc.id)}
+                                        sx={{ minWidth: 180 }}
                                     >
-                                        {statusArray.map((role, index) => (
+                                        {statusArray.map((status, index) => (
                                             <MenuItem
                                                 key={index}
-                                                value={role}
-                                                disabled={doc.status == 'Đã hoàn thành'}
+                                                value={status}
+                                                disabled={doc.status === 'Đã hoàn thành'}
                                             >
-                                                {role}
+                                                {status}
                                             </MenuItem>
                                         ))}
                                     </TextField>
                                 </TableCell>
-                                <TableCell>
+                                <TableCell align="center">
+                                    <Button
+                                        variant="outlined"
+                                        size="small"
+                                        onClick={() => handleOpenDialog(doc)}
+                                    >
+                                        Chi tiết
+                                    </Button>
+                                </TableCell>
+                                <TableCell align="center">
                                     <ClearIcon
-                                        className={classes.clearIcon}
+                                        sx={{
+                                            color: doc.status === 'Đã hoàn thành' ? '#ccc' : '#f44336',
+                                            cursor: doc.status === 'Đã hoàn thành' ? 'not-allowed' : 'pointer',
+                                            transition: '0.2s',
+                                            '&:hover': {
+                                                transform: doc.status === 'Đã hoàn thành' ? 'none' : 'scale(1.2)'
+                                            }
+                                        }}
                                         onClick={doc.status === 'Đã hoàn thành' ? undefined : () => handleClear(doc.id)}
                                     />
                                 </TableCell>
@@ -180,8 +204,36 @@ const StaffOrder = () => {
                     </TableFooter>
                 </MuiTable>
             </TableContainer>
+
+            {/* Dialog chi tiết đơn hàng */}
+            <Dialog open={openDialog} onClose={handleCloseDialog} fullWidth maxWidth="sm">
+                <DialogTitle>Chi tiết hóa đơn vận chuyển</DialogTitle>
+                <DialogContent dividers>
+                    {selectedOrder ? (
+                        <>
+                            <Typography><strong>ID:</strong> {selectedOrder.id}</Typography>
+                            <Typography><strong>Ngày:</strong> {selectedOrder.date}</Typography>
+                            <Typography><strong>Tổng:</strong> {currencyFormat(selectedOrder.total)} đ</Typography>
+                            <Typography sx={{ mt: 2 }}><strong>Chi tiết món:</strong></Typography>
+                            <ul style={{ paddingLeft: 16 }}>
+                                {selectedOrder.cart?.map((item, i) => (
+                                    <li key={i}>
+                                        {(item.name || item.subtitle || 'Món không rõ')} - {item.quantity} x {currencyFormat(item.price)} đ
+                                    </li>
+                                ))}
+                            </ul>
+                        </>
+                    ) : (
+                        <Typography>Không có dữ liệu</Typography>
+                    )}
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleCloseDialog}>Đóng</Button>
+                </DialogActions>
+            </Dialog>
         </Container>
-    )
+    );
+
 }
 
 export default StaffOrder

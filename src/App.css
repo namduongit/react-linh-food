@@ -1,0 +1,17 @@
+/* body hoặc root container */
+html, body, #root {
+  height: 100%;
+  margin: 0;
+}
+
+/* Container chính bao ngoài App */
+.app-container {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Nội dung chính chiếm khoảng còn lại */
+.main-container {
+  flex: 1;
+}

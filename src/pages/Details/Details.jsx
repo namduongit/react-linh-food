@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useStyles } from './styles';
-import { Button, Container, Grid, Typography } from '@mui/material';
+import { Button, Container, Grid, Typography, Box } from '@mui/material';
 import { projectFirestore, projectAuth } from "../../firebase/config";
 import { useParams } from 'react-router-dom';
 import { currencyFormat } from '../../utils/currencyFormat';
@@ -103,36 +103,55 @@ const Details = () => {
 
 
   return (
-    <Container className={classes.container}>
+    <Container maxWidth="lg" sx={{ py: 6 }}>
       {docs.map(doc => (
-        <Grid container spacing={4} key={doc.id}>
-          <Grid item sm={4} xs={12}>
-            <img src={doc.image} alt="details" width="100%" />
+        <Grid container spacing={6} key={doc.id} alignItems="flex-start">
+          {/* Hình ảnh */}
+          <Grid item xs={12} md={5}>
+            <Box
+              component="img"
+              src={doc.image}
+              alt={doc.name}
+              sx={{
+                width: '100%',
+                height: 'auto',
+                borderRadius: 3,
+                boxShadow: 3
+              }}
+            />
           </Grid>
-          <Grid item sm={8} xs={12}>
-            <Typography variant='h5' style={{ margin: '10px 0', fontWeight: 'bold' }}>
+
+          {/* Thông tin sản phẩm */}
+          <Grid item xs={12} md={7}>
+            <Typography variant="h4" fontWeight="bold" gutterBottom>
               {doc.name}
             </Typography>
-            <Typography variant='subtitle1' style={{ margin: '10px 0' }}>
+            <Typography variant="subtitle1" color="text.secondary" gutterBottom>
               {doc.subtitle}
             </Typography>
-            <Typography variant='body1'>
-              Giá tiền: {currencyFormat(doc.price)} đ/{doc.unit}
+            <Typography variant="h6" sx={{ mt: 1, mb: 2 }}>
+              Giá: <span style={{ color: '#d32f2f', fontWeight: 'bold' }}>
+                {currencyFormat(doc.price)} đ/{doc.unit}
+              </span>
             </Typography>
-            <Typography variant='subtitle2' style={{ margin: '10px 0' }}>
-              "Do đặc tính sản phẩm nên trọng lượng thực tế có thể chênh lệch so với số lượng bạn đặt hàng. Siêu thị hải sản Biển Đông sẽ xác nhận với bạn khi có sự thay đổi"
+
+            <Typography variant="body2" sx={{ mb: 2, fontStyle: 'italic', color: 'text.secondary' }}>
+              * Do đặc tính sản phẩm nên trọng lượng thực tế có thể chênh lệch so với số lượng bạn đặt. Chúng tôi sẽ xác nhận lại với bạn sau.
             </Typography>
-            <Typography variant='body2' style={{ margin: '10px 0' }}>
+
+            <Typography variant="body1" fontWeight="bold" sx={{ mt: 3 }}>
               Mô tả sản phẩm
             </Typography>
-            <hr />
-            <Typography variant='body1' style={{ margin: '10px 0' }}>
+            <Box sx={{ borderBottom: '1px solid #ddd', mb: 2 }} />
+            <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-line' }}>
               {doc.description}
             </Typography>
+
             <Button
               variant="contained"
-              color="warning"
-              style={{ marginTop: '10px' }}
+              color="primary"
+              size="large"
+              sx={{ mt: 4, px: 4, py: 1.5, borderRadius: 2 }}
               onClick={handleClick}
             >
               Thêm vào giỏ hàng
@@ -141,7 +160,8 @@ const Details = () => {
         </Grid>
       ))}
     </Container>
-  )
+  );
+
 }
 
 export default Details

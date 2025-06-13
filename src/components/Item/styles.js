@@ -6,7 +6,10 @@ export const useStyles = makeStyles((theme) => ({
         height: '60px',
     },
     card: {
-        height: '360px',
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'space-between',
         position: 'relative',
         '@media (max-width: 960px)': {
             height: '420px',
@@ -17,6 +20,9 @@ export const useStyles = makeStyles((theme) => ({
         cursor: 'pointer'
     },
     img: {
+
+        borderRadius: '12px 12px 0 0',
+        objectFit: 'cover',
         transition: '0.3s linear',
         "&:hover": {
             transform: 'scale(1.1)'
@@ -24,7 +30,6 @@ export const useStyles = makeStyles((theme) => ({
     },
     name: {
         fontWeight: 'bold',
-        display:'inline-block', 
-        height: '50px'
+        display: 'inline-block',
     },
 }));

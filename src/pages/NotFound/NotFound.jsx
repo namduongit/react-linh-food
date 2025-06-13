@@ -12,8 +12,7 @@ export default function NotFound() {
         py: 10,
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        marginTop: '150px'
+        alignItems: 'center'
       }}
     >
       <img

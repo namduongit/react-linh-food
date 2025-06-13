@@ -1,17 +1,15 @@
 import { useState, useEffect } from 'react';
-import { Container, FormControl, InputLabel, Typography, Box, TextField, Select, Button, MenuItem, Input } from '@mui/material'
-import { useStyles } from './styles';
+import {
+    Container, TextField, Typography, Box, Select, MenuItem,
+    Button, InputLabel, FormControl, Input
+} from '@mui/material';
+import { toast } from '../../../services/toast';
+import { useNavigate } from 'react-router-dom';
 
-import { projectFirestore } from '../../../firebase/config';
+import { projectFirestore, projectStorage } from '../../../firebase/config';
 import { categories, units, seafoodTypes, sideTypes } from '../../../constants';
 
-import { toast } from '../../../services/toast';
-
-// Băm và lưu hình anh
-import { projectStorage } from '../../../firebase/config';
-
-function AddMenu() {
-    // Nút chọn hình ảnh từ máy
+const AddMenu = () => {
     const [fileURL, setFileURL] = useState('');
     const [name, setName] = useState('');
     const [category, setCategory] = useState('');
@@ -20,21 +18,22 @@ function AddMenu() {
     const [description, setDescription] = useState('');
     const [price, setPrice] = useState(0);
     const [type, setType] = useState('');
-    const [loading, setLoading] = useState(true);
-
-    const classes = useStyles();
+    const [loading, setLoading] = useState(false);
+    const navigate = useNavigate();
 
     const handleUpload = async (event) => {
         const file = event.target.files[0];
         const storageRef = projectStorage.ref(file.name);
         await storageRef.put(file);
-        setFileURL(await storageRef.getDownloadURL());
-    }
+        const url = await storageRef.getDownloadURL();
+        setFileURL(url);
+        toast({ title: 'Thành công', message: 'Tải ảnh lên thành công!', type: 'success', duration: 2000 });
+    };
 
-
-    const handleSubmit = (event) => {
-        event.preventDefault();
-        projectFirestore.collection('menu').add({
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        await projectFirestore.collection('menu').add({
             name,
             category,
             subtitle,
@@ -44,161 +43,147 @@ function AddMenu() {
             price,
             image: fileURL,
         });
-        setName('');
-        setCategory('');
-        setSubtitle('');
-        setDescription('');
-        setPrice('');
-        setUnit('');
-        setType('');
-        toast({
-            title: 'Thông báo',
-            message: 'Thêm sản phẩm thành công',
-            type: 'success',
-            duration: 3000
-        });
-    }
-
-    useEffect(() => {
-        setLoading(false);
-    }, [setLoading])
+        toast({ title: 'Thành công', message: 'Đã thêm món ăn!', type: 'success', duration: 3000 });
+        navigate('/admin/menu');
+    };
 
     return (
-        <Container className={classes.root}>
-            <Typography variant="h4" className={classes.title}>
-                Thêm sản phẩm
-            </Typography>
-            <Typography variant="h5" className={classes.subtitle}>
-                Vui lòng điền đủ thông tin sản phẩm
-            </Typography>
-            <Box className={classes.form}>
-                <InputLabel>Chọn ảnh</InputLabel>
-                <Input
-                    className={classes.input}
-                    type="file" // type là file => upload file từ máy lên
-                    fullWidth
-                    onChange={handleUpload}
-                />
-                <TextField
-                    label="Tên sản phẩm"
-                    fullWidth
-                    value={name}
-                    onChange={(event) => setName(event.target.value)}
-                />
-                <Box className={classes.input}></Box>
-                <TextField
-                    multiline
-                    label="Mô tả sản phẩm"
-                    fullWidth
-                    value={description}
-                    onChange={(event) => setDescription(event.target.value)}
-                />
-                <Box className={classes.input}></Box>
-                <TextField
-                    multiline
-                    label="Ghi chú"
-                    fullWidth
-                    value={subtitle}
-                    onChange={(event) => setSubtitle(event.target.value)}
-                />
-                <FormControl fullWidth>
-                    <InputLabel className={classes.input}>Danh mục</InputLabel>
-                    <Select
-                        className={classes.input}
-                        value={category}
-                        onChange={(event) => setCategory(event.target.value)}
-                    >
-                        {categories.map((category) => (
-                            <MenuItem
-                                key={category.value}
-                                value={category.value}
-                            >
-                                {category.label}
-                            </MenuItem>
-                        ))}
-                    </Select>
-                </FormControl>
-                
-                {category === 'seafood' &&
-                    <FormControl fullWidth>
-                        <InputLabel className={classes.input}>Loại</InputLabel>
-                        <Select
-                            className={classes.input}
-                            value={type}
-                            onChange={(event) => setType(event.target.value)}
-                        >
-                            {seafoodTypes.map((type) => (
-                                <MenuItem
-                                    key={type.value}
-                                    value={type.value}
-                                >
-                                    {type.label}
-                                </MenuItem>
-                            ))}
-                        </Select>
-                    </FormControl>
-                }
+        <Container maxWidth="sm" sx={{ py: 6 }}>
+            <Box
+                sx={{
+                    p: 4,
+                    borderRadius: 3,
+                    boxShadow: 3,
+                    backgroundColor: '#fff',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 3,
+                }}
+            >
+                <Box>
+                    <Typography variant="h4" fontWeight="bold" gutterBottom>
+                        Thêm món ăn mới
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                        Điền thông tin chi tiết bên dưới để thêm món ăn vào menu.
+                    </Typography>
+                </Box>
 
-                {category === 'side' &&
-                    <FormControl fullWidth>
-                        <InputLabel className={classes.input}>Loại</InputLabel>
-                        <Select
-                            className={classes.input}
-                            value={type}
-                            onChange={(event) => setType(event.target.value)}
-                        >
-                            {sideTypes.map((type) => (
-                                <MenuItem
-                                    key={type.value}
-                                    value={type.value}
-                                >
-                                    {type.label}
-                                </MenuItem>
-                            ))}
-                        </Select>
-                    </FormControl>
-                }
-                <FormControl fullWidth>
-                    <InputLabel className={classes.input}>Đơn vị</InputLabel>
-                    <Select
-                        className={classes.input}
-                        value={unit}
-                        onChange={(event) => setUnit(event.target.value)}
-                    >
-                        {units.map((unit) => (
-                            <MenuItem
-                                key={unit.value}
-                                value={unit.value}
+                <form onSubmit={handleSubmit}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                        <FormControl fullWidth>
+                            <Input type="file" onChange={handleUpload} />
+                        </FormControl>
+
+                        <TextField
+                            label="Tên món ăn"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            fullWidth
+                            required
+                        />
+
+                        <TextField
+                            label="Mô tả"
+                            value={description}
+                            onChange={(e) => setDescription(e.target.value)}
+                            fullWidth
+                            multiline
+                            rows={3}
+                        />
+
+                        <TextField
+                            label="Ghi chú"
+                            value={subtitle}
+                            onChange={(e) => setSubtitle(e.target.value)}
+                            fullWidth
+                        />
+
+                        <FormControl fullWidth>
+                            <InputLabel>Danh mục</InputLabel>
+                            <Select
+                                value={category}
+                                onChange={(e) => setCategory(e.target.value)}
                             >
-                                {unit.label}
-                            </MenuItem>
-                        ))}
-                    </Select>
-                </FormControl>
-                <FormControl fullWidth>
-                    <Input
-                        type="number"
-                        fullWidth
-                        placeholder="Price"
-                        className={classes.input}
-                        value={price}
-                        onChange={(event) => setPrice(event.target.value)}
-                    />
-                </FormControl>
-                <Button
-                    className={classes.btn}
-                    variant="contained"
-                    color="primary"
-                    onClick={handleSubmit}
-                    disabled={loading}
-                >
-                    Add
-                </Button>
+                                {categories.map((c) => (
+                                    <MenuItem key={c.value} value={c.value}>
+                                        {c.label}
+                                    </MenuItem>
+                                ))}
+                            </Select>
+                        </FormControl>
+
+                        {category === 'seafood' && (
+                            <FormControl fullWidth>
+                                <InputLabel>Loại hải sản</InputLabel>
+                                <Select
+                                    value={type}
+                                    onChange={(e) => setType(e.target.value)}
+                                >
+                                    {seafoodTypes.map((t) => (
+                                        <MenuItem key={t.value} value={t.value}>
+                                            {t.label}
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
+                        )}
+
+                        {category === 'side' && (
+                            <FormControl fullWidth>
+                                <InputLabel>Loại món thêm</InputLabel>
+                                <Select
+                                    value={type}
+                                    onChange={(e) => setType(e.target.value)}
+                                >
+                                    {sideTypes.map((t) => (
+                                        <MenuItem key={t.value} value={t.value}>
+                                            {t.label}
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
+                        )}
+
+                        <FormControl fullWidth>
+                            <InputLabel>Đơn vị</InputLabel>
+                            <Select
+                                value={unit}
+                                onChange={(e) => setUnit(e.target.value)}
+                            >
+                                {units.map((u) => (
+                                    <MenuItem key={u.value} value={u.value}>
+                                        {u.label}
+                                    </MenuItem>
+                                ))}
+                            </Select>
+                        </FormControl>
+
+                        <TextField
+                            label="Giá"
+                            type="number"
+                            value={price}
+                            onChange={(e) => setPrice(Number(e.target.value))}
+                            fullWidth
+                            inputProps={{ min: 0 }}
+                        />
+
+                        <Box sx={{ textAlign: 'right', mt: 2 }}>
+                            <Button
+                                type="submit"
+                                variant="contained"
+                                color="primary"
+                                disabled={loading}
+                                size="large"
+                            >
+                                Thêm món
+                            </Button>
+                        </Box>
+                    </Box>
+                </form>
             </Box>
-
-
         </Container>
-    )
-}
+    );
+};
 
-export default AddMenu
+export default AddMenu;

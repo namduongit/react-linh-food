@@ -50,6 +50,10 @@ const Menu = () => {
             })
     }, [setDocs, category])
 
+    useEffect(() => {
+        setMenu(docs);
+    })
+
     return (
         <Container className={classes.container}>
             {

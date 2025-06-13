@@ -44,7 +44,7 @@ const Payment = () => {
         onSubmit: async values => {
             const confirm = await showNotification('Bạn chắc chắn đặt đơn hàng này ?');
             if (!confirm) return;
-            
+
 
             projectFirestore.collection('order').add({
                 name: values.name,
@@ -129,275 +129,201 @@ const Payment = () => {
 
 
     return (
-        <Container className={classes.container}>
-            <Grid container spacing={3}>
-                <Grid item md={7} style={{ paddingRight: '20px' }}>
+        <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+            <Grid container spacing={4}>
+                {/* Form thông tin giao hàng và thanh toán */}
+                <Grid item xs={12} md={7}>
+                    <Typography variant="h4" fontWeight="bold" gutterBottom>
+                        Thông tin giao hàng
+                    </Typography>
                     <form onSubmit={formik.handleSubmit}>
-                        <Box>
-                            <Typography variant="h4" style={{ marginBottom: '10px' }}>
-                                Thông tin giao hàng
-                            </Typography>
-                            <TextField
-                                label="Họ và tên"
-                                fullWidth
-                                onChange={formik.handleChange}
-                                value={formik.values.name}
-                                id="name"
-                                name="name"
-                                error={formik.touched.name && Boolean(formik.errors.name)}
-                                helperText={formik.touched.name && formik.errors.name}
-                            />
-                            <Box className={classes.input}></Box>
-                            <TextField
-                                label="Số điện thoại"
-                                fullWidth
-                                onChange={formik.handleChange}
-                                value={formik.values.phone}
-                                id="phone"
-                                name="phone"
-                                error={formik.touched.phone && Boolean(formik.errors.phone)}
-                                helperText={formik.touched.phone && formik.errors.phone}
-                            />
-                            <Box className={classes.input}></Box>
-                            <TextField
-                                label="Địa chỉ"
-                                fullWidth
-                                onChange={formik.handleChange}
-                                value={formik.values.address}
-                                id="address"
-                                name="address"
-                                error={formik.touched.address && Boolean(formik.errors.address)}
-                                helperText={formik.touched.address && formik.errors.address}
-                            />
-                            <Box className={classes.input}></Box>
-                            <Box className={classes.select}>
-                                <FormControl fullWidth style={{ marginRight: '10px' }}>
-                                    <InputLabel>Thành phố</InputLabel>
-                                    <Select
-                                        onChange={(e) => {
-                                            formik.setFieldValue('district', 0);
-                                            formik.setFieldValue('ward', 0);
+                        <TextField
+                            fullWidth
+                            label="Họ và tên"
+                            id="name"
+                            name="name"
+                            value={formik.values.name}
+                            onChange={formik.handleChange}
+                            error={formik.touched.name && Boolean(formik.errors.name)}
+                            helperText={formik.touched.name && formik.errors.name}
+                            sx={{ mb: 2 }}
+                        />
+                        <TextField
+                            fullWidth
+                            label="Số điện thoại"
+                            id="phone"
+                            name="phone"
+                            value={formik.values.phone}
+                            onChange={formik.handleChange}
+                            error={formik.touched.phone && Boolean(formik.errors.phone)}
+                            helperText={formik.touched.phone && formik.errors.phone}
+                            sx={{ mb: 2 }}
+                        />
+                        <TextField
+                            fullWidth
+                            label="Địa chỉ"
+                            id="address"
+                            name="address"
+                            value={formik.values.address}
+                            onChange={formik.handleChange}
+                            error={formik.touched.address && Boolean(formik.errors.address)}
+                            helperText={formik.touched.address && formik.errors.address}
+                            sx={{ mb: 2 }}
+                        />
 
-                                            formik.handleChange(e);
-                                        }}
-                                        value={formik.values.province}
-                                        id="province"
-                                        name="province"
-                                        error={formik.touched.province && Boolean(formik.errors.province)}
-                                    >
-                                        <MenuItem
-                                            disabled
-                                            hidden
-                                            value={0}
-                                        >
-                                            Chưa chọn
+                        {/* Chọn địa chỉ hành chính */}
+                        <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+                            <FormControl fullWidth>
+                                <InputLabel>Thành phố</InputLabel>
+                                <Select
+                                    name="province"
+                                    value={formik.values.province}
+                                    onChange={(e) => {
+                                        formik.setFieldValue('district', 0);
+                                        formik.setFieldValue('ward', 0);
+                                        formik.handleChange(e);
+                                    }}
+                                    error={formik.touched.province && Boolean(formik.errors.province)}
+                                >
+                                    <MenuItem value={0} disabled hidden>Chưa chọn</MenuItem>
+                                    {provinces.map(province => (
+                                        <MenuItem key={province.code} value={province.code}>
+                                            {province.name}
                                         </MenuItem>
-                                        {provinces.map(province => (
-                                            <MenuItem
-                                                key={province.code}
-                                                value={province.code}
-                                            >
-                                                {province.name}
-                                            </MenuItem>
-                                        ))}
-                                    </Select>
-                                    {formik.touched.province && formik.errors.province ? (
-                                        <FormHelperText
-                                            sx={{ color: "#bf3333" }}
-                                        >
-                                            {formik.touched.province && formik.errors.province}
-                                        </FormHelperText>
-                                    ) : null}
-                                </FormControl>
-                                <FormControl fullWidth style={{ marginRight: '10px' }}>
-                                    <InputLabel>Quận/Huyện</InputLabel>
-                                    <Select
-                                        onChange={(e) => {
-                                            formik.values.ward = 0;
-                                            formik.handleChange(e);
-                                        }}
-                                        value={formik.values.district}
-                                        id="district"
-                                        name="district"
-                                        error={formik.touched.district && Boolean(formik.errors.district)}
-                                    >
-                                        <MenuItem
-                                            disabled
-                                            hidden
-                                            value={0}
-                                        >
-                                            Chưa chọn
+                                    ))}
+                                </Select>
+                                {formik.touched.province && formik.errors.province && (
+                                    <FormHelperText sx={{ color: 'error.main' }}>
+                                        {formik.errors.province}
+                                    </FormHelperText>
+                                )}
+                            </FormControl>
+
+                            <FormControl fullWidth>
+                                <InputLabel>Quận/Huyện</InputLabel>
+                                <Select
+                                    name="district"
+                                    value={formik.values.district}
+                                    onChange={(e) => {
+                                        formik.setFieldValue('ward', 0);
+                                        formik.handleChange(e);
+                                    }}
+                                    error={formik.touched.district && Boolean(formik.errors.district)}
+                                >
+                                    <MenuItem value={0} disabled hidden>Chưa chọn</MenuItem>
+                                    {districts.map(district => (
+                                        <MenuItem key={district.code} value={district.code}>
+                                            {district.name}
                                         </MenuItem>
-                                        {districts.map(district => (
-                                            <MenuItem
-                                                key={district.code}
-                                                value={district.code}
-                                            >
-                                                {district.name}
-                                            </MenuItem>
-                                        ))}
-                                    </Select>
-                                    {formik.touched.district && formik.errors.district ? (
-                                        <FormHelperText
-                                            sx={{ color: "#bf3333" }}
-                                        >
-                                            {formik.touched.district && formik.errors.district}
-                                        </FormHelperText>
-                                    ) : null}
-                                </FormControl>
-                                <FormControl fullWidth >
-                                    <InputLabel >Thị trấn/ Xã/ Phường</InputLabel>
-                                    <Select
-                                        onChange={(e) => {
-                                            formik.handleChange(e);
-                                        }}
-                                        value={formik.values.ward}
-                                        id="ward"
-                                        name="ward"
-                                        error={formik.touched.ward && Boolean(formik.errors.ward)}
-                                    >
-                                        <MenuItem
-                                            disabled
-                                            hidden
-                                            value={0}
-                                        >
-                                            Chưa chọn
+                                    ))}
+                                </Select>
+                                {formik.touched.district && formik.errors.district && (
+                                    <FormHelperText sx={{ color: 'error.main' }}>
+                                        {formik.errors.district}
+                                    </FormHelperText>
+                                )}
+                            </FormControl>
+
+                            <FormControl fullWidth>
+                                <InputLabel>Phường/Xã</InputLabel>
+                                <Select
+                                    name="ward"
+                                    value={formik.values.ward}
+                                    onChange={formik.handleChange}
+                                    error={formik.touched.ward && Boolean(formik.errors.ward)}
+                                >
+                                    <MenuItem value={0} disabled hidden>Chưa chọn</MenuItem>
+                                    {wards.map(ward => (
+                                        <MenuItem key={ward.code} value={ward.code}>
+                                            {ward.name}
                                         </MenuItem>
-                                        {wards.map(ward => (
-                                            <MenuItem
-                                                key={ward.code}
-                                                value={ward.code}
-                                            >
-                                                {ward.name}
-                                            </MenuItem>
-                                        ))}
-                                    </Select>
-                                    {formik.touched.ward && formik.errors.ward ? (
-                                        <FormHelperText
-                                            sx={{ color: "#bf3333" }}
-                                        >
-                                            {formik.touched.ward && formik.errors.ward}
-                                        </FormHelperText>
-                                    ) : null}
-                                </FormControl>
-                            </Box>
+                                    ))}
+                                </Select>
+                                {formik.touched.ward && formik.errors.ward && (
+                                    <FormHelperText sx={{ color: 'error.main' }}>
+                                        {formik.errors.ward}
+                                    </FormHelperText>
+                                )}
+                            </FormControl>
                         </Box>
-                        <Typography variant="h4" style={{ marginTop: '10px' }}>
-                            Phương thức thanh toán
-                        </Typography>
-                        <Card style={{ marginTop: '10px' }}>
+
+                        {/* Phương thức thanh toán */}
+                        <Typography variant="h5" sx={{ mt: 3 }}>Phương thức thanh toán</Typography>
+                        <Card sx={{ mt: 2 }}>
                             <CardContent>
                                 <FormControl>
                                     <RadioGroup
-                                        id='payment'
-                                        aria-labelledby="payment"
-                                        defaultValue="cod"
                                         name="payment"
-                                        onChange={(e) => {
-                                            formik.handleChange(e);
-                                        }}
                                         value={formik.values.payment}
+                                        onChange={formik.handleChange}
                                     >
                                         <FormControlLabel
                                             value="cod"
                                             control={<Radio />}
-                                            label="Thanh toán khi nhận hàng(COD)"
+                                            label="Thanh toán khi nhận hàng (COD)"
                                         />
                                         <FormControlLabel
                                             value="transfer"
                                             control={<Radio />}
-                                            label="Thanh toán chuyển khoản"
+                                            label="Chuyển khoản ngân hàng"
                                         />
                                     </RadioGroup>
                                 </FormControl>
                             </CardContent>
-                            <hr />
-                            <CardActions style={{ display: 'flex' }}>
-                                <Box style={{ flexGrow: 1 }}>
-                                    <Button
-                                        className={classes.total}
-                                        color="primary"
-                                        variant="text"
-                                    >
-                                        <MaterialLink
-                                            color="inherit"
-                                            underline="none"
-                                            component={RouterLink} to='/Cart'
-                                        >
-                                            Quay lại giỏ hàng
-                                        </MaterialLink>
-                                    </Button>
-                                </Box>
-                                <Button
-                                    variant="contained"
-                                    color="warning"
-                                    type="submit"
-                                >
+                            <CardActions sx={{ justifyContent: 'space-between', px: 2 }}>
+                                <Button component={RouterLink} to="/cart" variant="text">
+                                    Quay lại giỏ hàng
+                                </Button>
+                                <Button variant="contained" color="warning" type="submit">
                                     Đặt mua
                                 </Button>
                             </CardActions>
-                            <hr />
-                            <CardContent className={classes.info}>
-                                <Typography>
-                                    Thông tin tài khoản sẽ gửi đến bạn khi hoàn tất đặt hàng (DVKH sẽ xác nhận khi có sự thay đổi về đơn hàng)
-                                </Typography>
-                            </CardContent>
                         </Card>
                     </form>
                 </Grid>
-                <Grid item md={5} style={{ borderLeft: '2px solid #ccc' }}>
-                    <Typography variant="h4">
+
+                {/* Danh sách giỏ hàng */}
+                <Grid item xs={12} md={5}>
+                    <Typography variant="h4" fontWeight="bold" gutterBottom>
                         Thông tin giỏ hàng
                     </Typography>
-                    {docs.map(cart => (
-                        <Card
-                            key={cart.id}
-                            sx={{
-                                display: 'flex',
-                                margin: '10px 0',
-                                position: 'relative',
-                                padding: '10px'
-                            }}
-                        >
-                            <Badge
-                                badgeContent={cart.quantity}
-                                color="error"
-                            >
-                                <CardMedia
-                                    component="img"
-                                    image={cart.image}
-                                    style={{ width: 100 }}
-                                />
-                            </Badge>
-                            <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-                                <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-                                    <CardContent>
-                                        <Typography sx={{ width: "370px" }}>
-                                            {cart.name}
-                                        </Typography>
-                                        <Typography>
-                                            {currencyFormat(cart.price)}/{cart.unit}
-                                        </Typography>
-                                    </CardContent>
+
+                    {docs.length === 0 ? (
+                        <Typography>Chưa có sản phẩm nào trong giỏ.</Typography>
+                    ) : (
+                        docs.map((cart) => (
+                            <Card key={cart.id} sx={{ display: 'flex', mb: 2, p: 1.5 }}>
+                                <Badge badgeContent={cart.quantity} color="error" sx={{ mr: 2 }}>
+                                    <CardMedia
+                                        component="img"
+                                        image={cart.image}
+                                        sx={{ width: 80, height: 80, borderRadius: 1 }}
+                                    />
+                                </Badge>
+                                <Box flexGrow={1}>
+                                    <Typography fontWeight="bold">{cart.name}</Typography>
+                                    <Typography variant="body2" color="text.secondary">
+                                        {currencyFormat(cart.price)} / {cart.unit}
+                                    </Typography>
+                                    <Typography fontWeight="bold" sx={{ mt: 1 }} color="primary">
+                                        Tạm tính: {currencyFormat(cart.price * cart.quantity)} đ
+                                    </Typography>
                                 </Box>
-                                <Typography style={{ position: 'absolute', bottom: 10, right: 20 }}>
-                                    Tạm tính: {currencyFormat(cart.price * cart.quantity)} đ
-                                </Typography>
-                            </Box>
-                        </Card>
-                    ))}
-                    <Box className={classes.total}>
-                        <Typography variant="h5" style={{ flexGrow: 1 }}>
-                            Tổng tiền
-                        </Typography>
-                        <Typography variant='h4'>
-                            {currencyFormat(localStorage.getItem('total'))} vnđ
+                            </Card>
+                        ))
+                    )}
+
+                    <Box sx={{ mt: 3, display: 'flex', justifyContent: 'space-between' }}>
+                        <Typography variant="h5">Tổng tiền:</Typography>
+                        <Typography variant="h5" fontWeight="bold" color="error">
+                            {currencyFormat(localStorage.getItem('total'))} đ
                         </Typography>
                     </Box>
                 </Grid>
             </Grid>
         </Container>
     )
+
 }
 
 export default Payment

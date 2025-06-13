@@ -34,7 +34,7 @@ const Item = ({ doc }) => {
                 projectFirestore.collection('cart').doc(check.id).update({
                     quantity: firebase.firestore.FieldValue.increment(1)
                 })
-            // Người lại sản phẩm đó chưa có trong giỏ hàng thì tạo mới
+                // Người lại sản phẩm đó chưa có trong giỏ hàng thì tạo mới
             } else {
                 projectFirestore.collection('cart').add({
                     uid: user.uid,
@@ -107,42 +107,66 @@ const Item = ({ doc }) => {
     }, [setDocs, setCart, user]);
 
     return (
-        <Grid item xs={12} sm={3} key={id}>
-            <Card className={classes.card}>
+        <Grid item xs={12} sm={6} md={3} key={id}>
+            <Card
+                className={classes.card}
+                sx={{
+                    borderRadius: 3,
+                    boxShadow: 3,
+                    transition: 'transform 0.3s, box-shadow 0.3s',
+                    '&:hover': {
+                        transform: 'translateY(-5px)',
+                        boxShadow: 6
+                    }
+                }}
+            >
                 <MaterialLink
                     underline="none"
                     color="inherit"
-                    component={RouterLink} to={`/details/${id}`}
+                    component={RouterLink}
+                    to={`/details/${id}`}
                 >
                     <CardMedia
                         component="img"
                         image={image}
-                        className={classes.img}
-                        width="200"
-                        height="200"
+                        alt={name}
+                        sx={{
+                            height: 200,
+                            objectFit: 'cover',
+                            borderTopLeftRadius: 12,
+                            borderTopRightRadius: 12
+                        }}
                     />
                 </MaterialLink>
+
                 <CardContent>
-                    <Typography >
-                        <span className={classes.name}>{name}</span>
+                    <Typography
+                        variant="subtitle1"
+                        fontWeight="bold"
+                        sx={{ mb: 1 }}
+                        className={classes.name}
+                    >
+                        {name}
                     </Typography>
-                    <Typography variant="body2">
-                        <span className={classes.price}>{currencyFormat(price)} đ/{unit}</span>
+                    <Typography variant="body2" color="text.secondary">
+                        {currencyFormat(price)} đ / {unit}
                     </Typography>
                 </CardContent>
-                <CardActions>
+
+                <CardActions sx={{ justifyContent: 'center', pb: 2 }}>
                     <Button
                         variant="contained"
                         color="warning"
                         onClick={handleClick}
+                        sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 'bold' }}
                     >
                         Thêm vào giỏ hàng
                     </Button>
                 </CardActions>
             </Card>
         </Grid>
+    );
 
-    )
 }
 
 export default Item

@@ -93,133 +93,120 @@ const StaffPayment = () => {
     }, [setDocs, setSeats, user]);
 
     return (
-        <Container className={classes.container}>
-            <Grid container spacing={3}>
-                <Grid item md={7} style={{ paddingRight: '20px' }}>
+        <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+            <Grid container spacing={4}>
+                {/* Form chọn bàn và đặt hàng */}
+                <Grid item xs={12} md={6}>
+                    <Typography variant="h4" fontWeight="bold" gutterBottom sx={{marginBottom: '10px'}}>
+                        Thông tin giao hàng
+                    </Typography>
+
                     <form onSubmit={formik.handleSubmit}>
-                        <Box>
-                            <Typography variant="h4" style={{ marginBottom: '10px' }}>
-                                Thông tin giao hàng
-                            </Typography>
-                            <FormControl fullWidth >
-                                <InputLabel >Chọn số bàn</InputLabel>
-                                <Select
-                                    onChange={(e) => {
-                                        formik.handleChange(e);
-                                    }}
-                                    value={formik.values.seat}
-                                    id="seat"
-                                    name="seat"
-                                    error={formik.touched.seat && Boolean(formik.errors.seat)}
-                                >
+                        <FormControl fullWidth>
+                            <InputLabel id="seat-label" sx={{marginBottom: '10px'}}>Chọn số bàn</InputLabel>
+                            <Select
+                                labelId="seat-label"
+                                id="seat"
+                                name="seat"
+                                value={formik.values.seat}
+                                onChange={(e) => {
+                                    formik.handleChange(e);
+                                }}
+                                error={formik.touched.seat && Boolean(formik.errors.seat)}
+                            >
+                                <MenuItem value={0} disabled hidden>
+                                    -- Chưa chọn --
+                                </MenuItem>
+                                {seats.map((seat) => (
                                     <MenuItem
-                                        disabled
-                                        hidden
-                                        value={0}
+                                        key={seat.id}
+                                        value={seat.number}
+                                        onClick={() => setSeatID(seat.id)}
                                     >
-                                        Chưa chọn
+                                        Bàn {seat.number} - {seat.name}
                                     </MenuItem>
-                                    {seats.map(seat => (
-                                        <MenuItem
-                                            key={seat.id}
-                                            value={seat.number}
-                                            onClick={() => setSeatID(seat.id)}
-                                        >
-                                            {seat.number} - {seat.name}
-                                        </MenuItem>
-                                    ))}
-                                </Select>
-                                {formik.touched.seat && formik.errors.seat ? (
-                                    <FormHelperText
-                                        sx={{ color: "#bf3333" }}
-                                    >
-                                        {formik.touched.seat && formik.errors.seat}
-                                    </FormHelperText>
-                                ) : null}
-                            </FormControl>
-                        </Box>
-                        <Card style={{ marginTop: '10px' }}>
-                            <hr />
-                            <CardActions style={{ display: 'flex' }}>
-                                <Box style={{ flexGrow: 1 }}>
-                                    <Button
-                                        className={classes.total}
-                                        color="primary"
-                                        variant="text"
-                                    >
-                                        <MaterialLink
-                                            color="inherit"
-                                            underline="none"
-                                            component={RouterLink} to='/Cart'
-                                        >
-                                            Quay lại giỏ hàng
-                                        </MaterialLink>
+                                ))}
+                            </Select>
+                            {formik.touched.seat && formik.errors.seat && (
+                                <FormHelperText sx={{ color: 'error.main' }}>
+                                    {formik.errors.seat}
+                                </FormHelperText>
+                            )}
+                        </FormControl>
+
+                        <Box mt={4}>
+                            <Card sx={{ p: 2, boxShadow: 3 }}>
+                                <Box display="flex" justifyContent="space-between" alignItems="center">
+                                    <Button variant="text" component={RouterLink} to="/cart">
+                                        Quay lại giỏ hàng
+                                    </Button>
+                                    <Button variant="contained" color="warning" type="submit">
+                                        Đặt mua
                                     </Button>
                                 </Box>
-                                <Button
-                                    variant="contained"
-                                    color="warning"
-                                    type="submit"
-                                >
-                                    Đặt mua
-                                </Button>
-                            </CardActions>
-                        </Card>
+                            </Card>
+                        </Box>
                     </form>
                 </Grid>
-                <Grid item md={5} style={{ borderLeft: '2px solid #ccc' }}>
-                    <Typography variant="h4">
+
+                {/* Danh sách món trong giỏ hàng */}
+                <Grid item xs={12} md={6}>
+                    <Typography variant="h4" fontWeight="bold" gutterBottom>
                         Thông tin giỏ hàng
                     </Typography>
-                    {docs.map(cart => (
-                        <Card
-                            key={cart.id}
-                            sx={{
-                                display: 'flex',
-                                margin: '10px 0',
-                                position: 'relative',
-                                padding: '10px'
-                            }}
-                        >
-                            <Badge
-                                badgeContent={cart.quantity}
-                                color="error"
+
+                    {docs.length === 0 ? (
+                        <Typography>Chưa có sản phẩm nào trong giỏ.</Typography>
+                    ) : (
+                        docs.map((cart) => (
+                            <Card
+                                key={cart.id}
+                                sx={{
+                                    display: 'flex',
+                                    mb: 2,
+                                    p: 1.5,
+                                    boxShadow: 2,
+                                    alignItems: 'center',
+                                }}
                             >
-                                <CardMedia
-                                    component="img"
-                                    image={cart.image}
-                                    style={{ width: 100 }}
-                                />
-                            </Badge>
-                            <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-                                <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-                                    <CardContent>
-                                        <Typography sx={{ width: "370px" }}>
-                                            {cart.name}
-                                        </Typography>
-                                        <Typography>
-                                            {currencyFormat(cart.price)}/{cart.unit}
-                                        </Typography>
-                                    </CardContent>
+                                <Badge
+                                    badgeContent={cart.quantity}
+                                    color="error"
+                                    sx={{ mr: 2 }}
+                                >
+                                    <CardMedia
+                                        component="img"
+                                        image={cart.image}
+                                        alt={cart.name}
+                                        sx={{ width: 90, height: 90, borderRadius: 2 }}
+                                    />
+                                </Badge>
+
+                                <Box flexGrow={1}>
+                                    <Typography fontWeight="bold">{cart.name}</Typography>
+                                    <Typography variant="body2" color="text.secondary">
+                                        {currencyFormat(cart.price)} / {cart.unit}
+                                    </Typography>
                                 </Box>
-                                <Typography style={{ position: 'absolute', bottom: 10, right: 20 }}>
-                                    Tạm tính: {currencyFormat(cart.price * cart.quantity)} đ
+
+                                <Typography fontWeight="bold" color="primary">
+                                    {currencyFormat(cart.price * cart.quantity)} đ
                                 </Typography>
-                            </Box>
-                        </Card>
-                    ))}
-                    <Box className={classes.total}>
-                        <Typography variant="h5" style={{ flexGrow: 1 }}>
-                            Tổng tiền
-                        </Typography>
-                        <Typography variant='h4'>
-                            {currencyFormat(localStorage.getItem('total'))} vnđ
+                            </Card>
+                        ))
+                    )}
+
+                    <Box mt={3} display="flex" justifyContent="space-between" alignItems="center">
+                        <Typography variant="h5">Tổng tiền:</Typography>
+                        <Typography variant="h5" fontWeight="bold" color="error">
+                            {currencyFormat(localStorage.getItem('total'))} đ
                         </Typography>
                     </Box>
                 </Grid>
             </Grid>
         </Container>
-    )
+    );
+
 }
 
 export default StaffPayment
