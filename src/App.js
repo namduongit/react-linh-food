@@ -121,6 +121,8 @@ function App() {
                     <>
                       <Route exact path='/admin/order' element={<Orders />} />
                       <Route exact path='/staff/order' element={<Orders />} />
+                      <Route exact path='/admin/dinein' element={<DineIn />} />
+                      <Route exact path='/staff/dinein' element={<DineIn />} />
                       <Route exact path='/order' element={<Orders />} />
                       <Route exact path='/dinein' element={<DineIn />} />
                     </>
