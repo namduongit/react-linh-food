@@ -4,7 +4,7 @@ import zalo from '../../assets/contact/zalo-icon.png';
 const ZaloButton = () => {
     return (
         <a
-            href="https://zalo.me/0364979922"
+            href="https://zalo.me/0364799922"
             target="_blank"
             rel="noopener noreferrer"
             className="zalo-button"

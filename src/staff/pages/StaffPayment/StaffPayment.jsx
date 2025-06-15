@@ -21,6 +21,27 @@ const StaffPayment = () => {
 
     const [total, setTotal] = useState(0);
 
+    function mergeCarts(oldCart, newCart) {
+        const merged = [...oldCart];
+
+        newCart.forEach(newItem => {
+            const index = merged.findIndex(item => item.id === newItem.id);
+            if (index !== -1) {
+                // Nếu món đã tồn tại, cộng dồn số lượng
+                merged[index].quantity += newItem.quantity;
+            } else {
+                merged.push(newItem);
+            }
+        });
+
+        return merged;
+    }
+
+    function calculateTotal(cart) {
+        return cart.reduce((sum, item) => sum + item.quantity * item.price, 0);
+    }
+
+
     const navigate = useNavigate();
     const formik = useFormik({
         initialValues: {
@@ -31,41 +52,68 @@ const StaffPayment = () => {
             const confirm = await showNotification('Bạn có chắc đặt đơn hàng này ?');
             if (!confirm) return;
 
-            projectFirestore.collection('seat').doc(seatID).update({
-                available: false,
-                total: total,
-                date: new Date().toLocaleString(),
-            })
-            projectFirestore.collection('dinein').add({
-                seatID,
-                seat: values.seat,
-                note: localStorage.getItem('note'),
-                total: total,
-                cart: docs,
-                status: "Chưa xác nhận",
-                checked: false,
-                date: new Date().toLocaleString(),
-            })
+            const dineinQuery = await projectFirestore
+                .collection('dinein')
+                .where('seatID', '==', seatID)
+                .where('status', '!=', 'Đã hoàn thành')
+                .limit(1)
+                .get();
+
+            const now = new Date().toLocaleString();
+            const note = localStorage.getItem('note') || '';
+
+
+            if (dineinQuery.empty) {
+                // Chưa có hóa đơn, tạo mới
+                await projectFirestore.collection('dinein').add({
+                    seatID,
+                    seat: values.seat,
+                    note: note,
+                    total: calculateTotal(docs),
+                    cart: docs,
+                    status: "Chưa xác nhận",
+                    checked: false,
+                    date: now
+                });
+            } else {
+                // Đã có hóa đơn -> gộp giỏ hàng
+                const docRef = dineinQuery.docs[0].ref;
+                const oldData = dineinQuery.docs[0].data();
+                console.log(oldData)
+                const oldCart = oldData.cart || [];
+
+                const mergedCart = mergeCarts(oldCart, docs);
+                const newTotal = calculateTotal(mergedCart);
+
+                await docRef.update({
+                    cart: mergedCart,
+                    total: newTotal,
+                    note: note,
+                    date: now
+                });
+            }
+
             toast({
                 title: 'Thông báo',
                 message: 'Đặt hàng thành công',
                 type: 'success',
                 duration: 3000
             });
+
             localStorage.setItem('note', '');
             navigate('/staff/dinein');
+
+            // Xoá giỏ hàng sau khi đặt
             const cart_query = projectFirestore.collection('cart').where('uid', '==', user.uid);
-            cart_query.get().then((querySnapshot) => {
-                querySnapshot.forEach((doc) => {
-                    doc.ref.delete();
-                });
-            });
+            const querySnapshot = await cart_query.get();
+            querySnapshot.forEach((doc) => doc.ref.delete());
         },
     });
 
+
     useEffect(() => {
         projectFirestore.collection('seat')
-            .where('available', '==', true)
+            .where('status', '==', 'Đang có khách')
             .orderBy('number', 'asc')
             .onSnapshot((snap) => {
                 let documents = [];
@@ -93,6 +141,7 @@ const StaffPayment = () => {
                 })
         }
     }, [setDocs, setSeats, user]);
+
 
     useEffect(() => {
         if (user) {
@@ -136,7 +185,7 @@ const StaffPayment = () => {
                                         value={seat.number}
                                         onClick={() => setSeatID(seat.id)}
                                     >
-                                        Bàn {seat.number} - {seat.name}
+                                        SN: {seat.number} - {seat.name}
                                     </MenuItem>
                                 ))}
                             </Select>

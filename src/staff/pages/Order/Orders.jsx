@@ -60,10 +60,11 @@ const StaffOrder = () => {
         })
     }
 
-    const handleStatus = (event, id) => {
+    const handleStatus = async (event, id) => {
         projectFirestore.collection('order').doc(id).update("status", event.target.value);
         if (event.target.value === 'Đã hoàn thành') {
-            if (window.confirm('Hoàn tất đơn hàng?')) {
+            const confirm = await showNotification('Hoàn tất đơn hàng ?');
+            if (confirm) {
                 projectFirestore.collection('order').doc(id).update("checked", true)
             } else {
                 projectFirestore.collection('order').doc(id).update({

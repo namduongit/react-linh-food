@@ -12,6 +12,8 @@ import { projectFirestore } from '../../../firebase/config';
 import { currencyFormat } from '../../../utils/currencyFormat';
 import { QRCodeCanvas } from 'qrcode.react';
 
+import dayjs from 'dayjs';
+
 
 const Seat = () => {
     const classes = useStyles();
@@ -20,22 +22,25 @@ const Seat = () => {
 
     const [seatName, setSeatName] = useState('');
     const [seatNumber, setSeatNumber] = useState(0);
-
     const [seatNameEdit, setSeatNameEdit] = useState('');
+    const [seatNumberEdit, setSeatNumberEdit] = useState('');
     const [seatTotalEdit, setseatTotalEdit] = useState(0);
     const [seatStatusEdit, setSeatStatusEdit] = useState('');
-
     const [filterAvailable, setFilterAvailable] = useState('all');
-    const [sortOrder, setSortOrder] = useState('asc');
+    const [reservationTime, setReservationTime] = useState(null);
 
+
+    const [sortOrder, setSortOrder] = useState('asc');
     const [selectedSeat, setSelectedSeat] = useState(null);
     const [openDialog, setOpenDialog] = useState(false);
 
     const handleEditSeat = (seat) => {
         setSelectedSeat(seat);
         setSeatNameEdit(seat.name);
+        setSeatNumberEdit(seat.number);
         setseatTotalEdit(seat.total);
-        setSeatStatusEdit(seat.available);
+        setSeatStatusEdit(seat.status);
+        setReservationTime(seat.reservationTime || null);
     };
 
     const handleSaveEdit = async () => {
@@ -48,36 +53,16 @@ const Seat = () => {
 
         await updateDoc(doc(projectFirestore, 'seat', selectedSeat.id), {
             name: seatNameEdit,
-            number: parseInt(seatTotalEdit),
-            available: seatStatusEdit
+            number: seatNumberEdit,
+            status: seatStatusEdit,
+            reservationTime: seatStatusEdit === 'Khách đặt bàn' ? reservationTime : null
         });
+
 
         toast({ title: 'Thông báo', message: 'Cập nhật thông tin bàn thành công', type: 'success', duration: 3000 });
         setOpenDialog(false);
     };
 
-    const handleSeat = async (available, number, id) => {
-        const seatTotal = userBill.find(seat => parseInt(seat.userSeat) === number);
-        if (seatTotal) {
-            if (available === true) {
-                await updateDoc(doc(projectFirestore, 'seat', id), {
-                    total: seatTotal.total,
-                    available: false,
-                });
-            } else {
-                const confirm = await showNotification('Thanh toán đơn hàng?');
-                if (!confirm) return;
-                await updateDoc(doc(projectFirestore, 'seat', id), {
-                    total: 0,
-                    available: true,
-                });
-                await updateDoc(doc(projectFirestore, 'dinein', seatTotal.id), {
-                    checked: true
-                });
-                toast({ title: 'Thông báo', message: `Thanh toán đơn hàng ${id} thành công`, type: 'success', duration: 3000 });
-            }
-        }
-    };
 
     const handleClear = async (id) => {
         if (!selectedSeat) {
@@ -109,7 +94,7 @@ const Seat = () => {
         await addDoc(collection(projectFirestore, 'seat'), {
             name: seatName,
             number: parseInt(seatNumber),
-            available: true,
+            status: 'Trống',
             total: 0,
         });
         toast({ title: 'Thông báo', message: 'Thêm bàn thành công', type: 'success', duration: 3000 });
@@ -118,11 +103,12 @@ const Seat = () => {
     };
 
     const filteredSeats = seatState
-        .filter(seat => filterAvailable === 'all' || seat.available === (filterAvailable === 'available'))
+        .filter(seat => filterAvailable === 'all' || seat.status === filterAvailable)
         .sort((a, b) => sortOrder === 'asc' ? a.number - b.number : b.number - a.number);
 
+
     useEffect(() => {
-        const unsubDinein = onSnapshot(query(collection(projectFirestore, 'dinein'), where('checked', '==', false)), (snap) => {
+        const unsubDinein = onSnapshot(query(collection(projectFirestore, 'dinein'), where('status', '!=', 'Đã hoàn thành')), (snap) => {
             const documents = snap.docs.map(doc => ({ ...doc.data(), id: doc.id }));
             setUserBill(documents);
         });
@@ -138,10 +124,53 @@ const Seat = () => {
         };
     }, []);
 
+
+    useEffect(() => {
+        seatState.forEach(async seat => {
+            if (seat.reservationTime != null) {
+                const [hourStr, minuteStr] = seat.reservationTime.split(':');
+                const now = new Date();
+
+                const lateDate = new Date(
+                    now.getFullYear(),
+                    now.getMonth(),
+                    now.getDate(),
+                    parseInt(hourStr),
+                    parseInt(minuteStr),
+                    0
+                );
+                if (now > lateDate) {
+                    await updateDoc(doc(projectFirestore, 'seat', seat.id), {
+                        reservationTime: null,
+                        status: 'Trống'
+                    });
+                }
+            }
+        });
+    }, [seatState]);
+
+
+    // Cập nhật tổng tiền cho Seat
+    useEffect(() => {
+        seatState.forEach(seat => {
+            userBill.forEach(async bill => {
+                if (bill.seatID == seat.id) {
+                    await updateDoc(doc(projectFirestore, 'seat', seat.id), {
+                        total: bill.total,
+                    });
+                }
+            })
+        })
+    }, [userBill, seatState]);
+
+
     return (
         <Container className={classes.root} sx={{ marginBottom: '50px' }}>
             <Typography variant="h4" fontWeight="bold" gutterBottom>
                 Quản lý chỗ ngồi
+            </Typography>
+            <Typography variant="body1" sx={{ mb: 2 }}>
+                Mô hình nhỏ nên chỉ có 10 bàn
             </Typography>
             <Grid container spacing={4}>
                 <Grid item xs={12} md={4}>
@@ -153,16 +182,20 @@ const Seat = () => {
                             value={seatName}
                             onChange={(e) => setSeatName(e.target.value)}
                             margin="normal"
+                            disabled={seatState.length >= 10}
                         />
                         <TextField
-                            label="Số bàn"
+                            label="Số người ngồi được"
                             fullWidth
                             type="number"
                             value={seatNumber}
                             onChange={(e) => setSeatNumber(e.target.value)}
                             margin="normal"
+                            disabled={seatState.length >= 10}
                         />
-                        <Button variant="contained" color="primary" onClick={handleAddSeat} fullWidth>Thêm</Button>
+                        <Button variant="contained" color="primary" onClick={handleAddSeat} disabled={seatState.length >= 10} fullWidth>
+                            Thêm
+                        </Button>
                     </Box>
                 </Grid>
                 <Grid item xs={12} md={8}>
@@ -171,8 +204,9 @@ const Seat = () => {
                             <InputLabel>Trạng thái</InputLabel>
                             <Select value={filterAvailable} onChange={(e) => setFilterAvailable(e.target.value)} label="Trạng thái">
                                 <MenuItem value="all">Tất cả</MenuItem>
-                                <MenuItem value="available">Trống</MenuItem>
-                                <MenuItem value="unavailable">Đang dùng</MenuItem>
+                                <MenuItem value="Trống">Trống</MenuItem>
+                                <MenuItem value="Đang có khách">Đang có khách</MenuItem>
+                                <MenuItem value="Khách đặt bàn">Khách đặt bàn</MenuItem>
                             </Select>
                         </FormControl>
                         <FormControl sx={{ marginRight: '20px', width: '150px' }}>
@@ -182,27 +216,42 @@ const Seat = () => {
                                 <MenuItem value="desc">Giảm dần</MenuItem>
                             </Select>
                         </FormControl>
-                        <Button variant="outlined" sx={{ marginRight: '20px', width: '150px' }} onClick={() => {
-                            if (!selectedSeat) {
-                                toast({ title: 'Thông báo', message: 'Bạn chưa chọn bàn nào để sửa', type: 'warning', duration: 3000 });
-                                return;
-                            }
-                            setOpenDialog(true)
-                        }}>Sửa</Button>
-                        <Button variant="outlined" color="error" sx={{ marginRight: '20px', width: '150px' }} onClick={() => {
-                            if (!selectedSeat) {
-                                toast({ title: 'Thông báo', message: 'Bạn chưa chọn bàn nào để xóa', type: 'warning', duration: 3000 });
-                                return;
-                            }
-                            handleClear(selectedSeat.id)
-                        }}>Xóa</Button>
+                        <Button
+                            variant="outlined"
+                            sx={{ marginRight: '20px', width: '150px' }}
+                            onClick={() => {
+                                if (!selectedSeat) {
+                                    toast({ title: 'Thông báo', message: 'Bạn chưa chọn bàn nào để sửa', type: 'warning', duration: 3000 });
+                                    return;
+                                }
+                                setOpenDialog(true);
+                            }}
+                        >
+                            Sửa
+                        </Button>
+                        <Button
+                            variant="outlined"
+                            color="error"
+                            sx={{ marginRight: '20px', width: '150px' }}
+                            onClick={() => {
+                                if (!selectedSeat) {
+                                    toast({ title: 'Thông báo', message: 'Bạn chưa chọn bàn nào để xóa', type: 'warning', duration: 3000 });
+                                    return;
+                                }
+                                handleClear(selectedSeat.id);
+                            }}
+                        >
+                            Xóa
+                        </Button>
                     </Box>
 
                     <Grid container spacing={2} alignItems="stretch" sx={{ marginTop: '20px' }}>
-                        {filteredSeats.map(seat => (
+                        {filteredSeats.map((seat) => (
                             <Grid item xs={12} sm={6} md={4} key={seat.id}>
                                 <Box
-                                    onClick={() => { handleSeat(seat.available, seat.number, seat.id); handleEditSeat(seat); }}
+                                    onClick={() => {
+                                        handleEditSeat(seat);
+                                    }}
                                     p={2}
                                     borderRadius={2}
                                     boxShadow={selectedSeat?.id === seat.id ? 4 : 2}
@@ -219,14 +268,17 @@ const Seat = () => {
                                     }}
                                 >
                                     <Box>
-                                        <Typography variant="body1">Bàn {seat.number} - {seat.name}</Typography>
+                                        <Typography variant="body1">SN: {seat.number} - {seat.name}</Typography>
                                         <Typography variant="body2">Tổng: {currencyFormat(seat.total)} đ</Typography>
-                                        <Typography variant="body2">
-                                            Trạng thái: {seat.available ? 'Trống' : 'Đang có khách'}
-                                        </Typography>
+                                        <Typography variant="body2">Trạng thái: {seat.status}</Typography>
+                                        {seat.status === 'Khách đặt bàn' && seat.reservationTime && (
+                                            <Typography variant="body2">
+                                                Khách đến: {seat.reservationTime}
+                                            </Typography>
+                                        )}
                                     </Box>
                                     <Box mt={2} display="flex" justifyContent="center">
-                                        <QRCodeCanvas value={"Tên bàn: "+ seat.name} size={100} />
+                                        <QRCodeCanvas value={`Tên bàn: ${seat.name}`} size={100} />
                                     </Box>
                                 </Box>
                             </Grid>
@@ -243,14 +295,27 @@ const Seat = () => {
                     <FormControl fullWidth margin="normal">
                         <InputLabel>Trạng thái</InputLabel>
                         <Select
-                            value={seatStatusEdit ? 'available' : 'unavailable'}
-                            onChange={(e) => setSeatStatusEdit(e.target.value === 'available')}
+                            value={seatStatusEdit}
+                            onChange={(e) => setSeatStatusEdit(e.target.value)}
                             label="Trạng thái"
                         >
-                            <MenuItem value="available">Trống</MenuItem>
-                            <MenuItem value="unavailable">Đang có khách</MenuItem>
+                            <MenuItem value="Trống">Trống</MenuItem>
+                            <MenuItem value="Đang có khách">Đang có khách</MenuItem>
+                            <MenuItem value="Khách đặt bàn">Khách đặt bàn</MenuItem>
                         </Select>
                     </FormControl>
+                    {seatStatusEdit === 'Khách đặt bàn' && (
+                        <TextField
+                            label="Thời gian khách đến"
+                            type="time"
+                            fullWidth
+                            InputLabelProps={{ shrink: true }}
+                            value={reservationTime || ""}
+                            onChange={(e) => setReservationTime(e.target.value)}
+                            margin="normal"
+                        />
+
+                    )}
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={() => setOpenDialog(false)} color="secondary">Hủy</Button>
@@ -258,6 +323,7 @@ const Seat = () => {
                 </DialogActions>
             </Dialog>
         </Container>
+
     );
 };
 

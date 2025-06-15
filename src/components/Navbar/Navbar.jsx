@@ -105,7 +105,7 @@ const Navbar = () => {
     }, [user]);
 
     return (
-        <div style={{ position: 'sticky', top: 0, zIndex: 9999 }}>
+        <div style={{ position: 'sticky', top: 0, zIndex: 100 }}>
             <div className={classes.navbar} style={{ backgroundColor: '#2e9ed5' }}>
                 <Container maxWidth="xl">
                     <Toolbar disableGutters sx={{ py: 1 }}>

@@ -72,7 +72,7 @@ const AddMenu = () => {
                 <form onSubmit={handleSubmit}>
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                         <FormControl fullWidth>
-                            <Input type="file" onChange={handleUpload} />
+                            <Input type="file" onChange={handleUpload} required/>
                         </FormControl>
 
                         <TextField
@@ -90,6 +90,7 @@ const AddMenu = () => {
                             fullWidth
                             multiline
                             rows={3}
+                            required
                         />
 
                         <TextField
@@ -99,7 +100,7 @@ const AddMenu = () => {
                             fullWidth
                         />
 
-                        <FormControl fullWidth>
+                        <FormControl fullWidth required>
                             <InputLabel>Danh mục</InputLabel>
                             <Select
                                 value={category}
@@ -114,7 +115,7 @@ const AddMenu = () => {
                         </FormControl>
 
                         {category === 'seafood' && (
-                            <FormControl fullWidth>
+                            <FormControl fullWidth required>
                                 <InputLabel>Loại hải sản</InputLabel>
                                 <Select
                                     value={type}
@@ -130,7 +131,7 @@ const AddMenu = () => {
                         )}
 
                         {category === 'side' && (
-                            <FormControl fullWidth>
+                            <FormControl fullWidth required>
                                 <InputLabel>Loại món thêm</InputLabel>
                                 <Select
                                     value={type}
@@ -145,7 +146,7 @@ const AddMenu = () => {
                             </FormControl>
                         )}
 
-                        <FormControl fullWidth>
+                        <FormControl fullWidth required>
                             <InputLabel>Đơn vị</InputLabel>
                             <Select
                                 value={unit}
@@ -166,6 +167,7 @@ const AddMenu = () => {
                             onChange={(e) => setPrice(Number(e.target.value))}
                             fullWidth
                             inputProps={{ min: 0 }}
+                            required
                         />
 
                         <Box sx={{ textAlign: 'right', mt: 2 }}>

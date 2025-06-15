@@ -66,14 +66,18 @@ const StaffReserve = () => {
     }, []);
 
     useEffect(() => {
-        const today = new Date();
+        const endOfToday = new Date();
+        endOfToday.setHours(23, 59, 59, 999);
+
         docs.forEach(doc => {
             const lateDate = new Date(doc.date);
-            if (today > lateDate && !doc.checked) {
+
+            if (endOfToday > lateDate && !doc.checked) {
                 projectFirestore.collection('reserve').doc(doc.id).delete();
             }
         });
     }, [docs]);
+
 
     return (
         <Container sx={{ mb: 6 }}>
@@ -116,27 +120,27 @@ const StaffReserve = () => {
                                 <TableCell align="center">
                                     <CheckIcon
                                         sx={{
-                                            color: doc.status === 'Đã hoàn thành' ? '#ccc' : '#4caf50',
-                                            cursor: doc.status === 'Đã hoàn thành' ? 'not-allowed' : 'pointer',
+                                            color: doc.checked ? '#ccc' : '#4caf50',
+                                            cursor: doc.checked ? 'not-allowed' : 'pointer',
                                             transition: '0.2s',
                                             '&:hover': {
-                                                transform: doc.status === 'Đã hoàn thành' ? 'none' : 'scale(1.2)'
+                                                transform: doc.checked ? 'none' : 'scale(1.2)'
                                             }
                                         }}
-                                        onClick={doc.status === 'Đã hoàn thành' ? undefined : () => handleCheck(doc.id)}
+                                        onClick={doc.checked ? undefined : () => handleCheck(doc.id)}
                                     />
                                 </TableCell>
                                 <TableCell align="center">
                                     <ClearIcon
                                         sx={{
-                                            color: doc.status === 'Đã hoàn thành' ? '#ccc' : '#f44336',
-                                            cursor: doc.status === 'Đã hoàn thành' ? 'not-allowed' : 'pointer',
+                                            color: doc.checked ? '#ccc' : '#f44336',
+                                            cursor: doc.checked ? 'not-allowed' : 'pointer',
                                             transition: '0.2s',
                                             '&:hover': {
-                                                transform: doc.status === 'Đã hoàn thành' ? 'none' : 'scale(1.2)'
+                                                transform: doc.checked ? 'none' : 'scale(1.2)'
                                             }
                                         }}
-                                        onClick={doc.status === 'Đã hoàn thành' ? undefined : () => handleClear(doc.id)}
+                                        onClick={doc.checked ? undefined : () => handleClear(doc.id)}
                                     />
                                 </TableCell>
                             </TableRow>

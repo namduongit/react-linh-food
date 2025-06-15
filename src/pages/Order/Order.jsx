@@ -153,7 +153,7 @@ const Order = () => {
                             <Typography><strong>Ngày đặt:</strong> {selectedOrder.date}</Typography>
                             <Typography><strong>Trạng thái:</strong> {selectedOrder.status}</Typography>
                             <Typography><strong>Tổng tiền:</strong> {currencyFormat(selectedOrder.total)} đ</Typography>
-
+                            {/* Duyệt mảng */}
                             <Typography><strong>Món đã đặt:</strong></Typography>
                             <Box component="ul" sx={{ pl: 2 }}>
                                 {selectedOrder.cart.map((item, index) => (
