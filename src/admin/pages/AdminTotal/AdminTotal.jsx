@@ -212,6 +212,11 @@ const AdminTotal = () => {
       <Typography variant="h4" align="left" sx={{ mt: 4, mb: 3, fontWeight: 'bold' }}>
         Thống kê doanh thu
       </Typography>
+      <Box sx={{ mb: 2, textAlign: 'left' }}>
+        <Button variant="contained">
+          Thống kê lợi nhuận
+        </Button>
+      </Box>
 
       <Box component={Paper} sx={{ p: 3, mb: 4 }}>
         <Grid container spacing={2}>

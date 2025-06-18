@@ -12,19 +12,30 @@ import {
 } from '@mui/material';
 import { useState, useEffect } from 'react';
 import { useStyles } from './styles';
-import { projectFirestore } from '../../../firebase/config';
+import { projectAuth, projectFirestore, projectStorage } from '../../../firebase/config';
 import { toast } from '../../../services/toast';
 import { Delete } from '@mui/icons-material';
+
+import { updateDoc, addDoc, doc, collection } from 'firebase/firestore';
+import { useAuthState } from 'react-firebase-hooks/auth';
+
+import { useNavigate } from 'react-router-dom';
+import { showNotification } from '../../../services/showNotification';
+
 
 const AddInbound = () => {
   const classes = useStyles();
   const [supplier, setSupplier] = useState('');
-  const [accountId] = useState('admin01');
-  const [date] = useState(new Date().toLocaleDateString('vi-VN'));
+  const [user] = useAuthState(projectAuth);
+  const [date] = useState(new Date().toLocaleString());
   const [menuItems, setMenuItems] = useState([]);
   const [selectedItems, setSelectedItems] = useState([]);
   const [filterCategory, setFilterCategory] = useState('');
   const [categories, setCategories] = useState([]);
+
+  const navigate = useNavigate();
+
+
 
   // Lấy danh sách sản phẩm và loại
   useEffect(() => {
@@ -62,36 +73,77 @@ const AddInbound = () => {
   const handleSubmit = async () => {
     if (!supplier || selectedItems.length === 0) {
       toast({
-        title: 'Lỗi',
+        title: 'Thông báo',
         message: 'Vui lòng nhập nhà cung cấp và chọn sản phẩm.',
-        type: 'error',
+        type: 'warning',
+        duration: 3000
       });
       return;
     }
 
-    const newInbound = {
-      supplier,
-      accountId,
-      date,
-      items: selectedItems,
-      total: totalAmount,
-      status: 'Chưa xác nhận',
-      createdAt: new Date(),
-    };
+    const check = selectedItems.find(item => (item.quantity < 1 || item.price < 1));
+    if (check) {
+      toast({
+          title: 'Thông báo',
+          message: 'Vui lòng nhập giá và số lượng lớn hơn 0',
+          type: 'warning',
+          duration: 3000
+        })
+        return;
+    }
 
-    await projectFirestore.collection('inbounds').add(newInbound);
-    toast({
-      title: 'Thành công',
-      message: 'Thêm phiếu nhập thành công!',
-      type: 'success',
+
+    const confirm = await showNotification('Chắc chắn thêm phiếu nhập ?');
+    if (!confirm) return;
+
+    // Tạo phiếu nhập
+    const docRef = await addDoc(collection(projectFirestore, 'inbound'), {
+      uid: user.uid,
+      supplier: supplier,
+      date: date,
+      total: 0,
+      status: 'Chưa xác nhận'
     });
-    setSupplier('');
-    setSelectedItems([]);
+
+    toast({
+      title: 'Thông báo',
+      message: 'Tạo phiếu nhập thành công',
+      type: 'success',
+      duration: 3000
+    });
+
+    const inboundId = docRef.id;
+    // Cập nhật hóa đơn
+    var total = 0;
+    selectedItems.forEach(async item => {
+      total += item.quantity * item.price;
+      await addDoc(collection(projectFirestore, 'detail'), {
+        inboundId: inboundId,
+        menuId: item.id,
+        quantity: item.quantity,
+        price: item.price,
+        menuName: item.name
+      });
+    })
+    // Cập nhâtj thông tin phiếu nhập
+    updateDoc(doc(projectFirestore, 'inbound', inboundId), {
+      total: total
+    });
+
+    toast({
+      title: 'Thông báo',
+      message: 'Cập nhật phiếu nhập thành công',
+      type: 'success',
+      duration: 3000
+    });
+    navigate('/admin/inbound')
   };
 
   const filteredMenu = filterCategory
     ? menuItems.filter((item) => item.category === filterCategory)
     : menuItems;
+
+
 
   return (
     <Container maxWidth="xl">
@@ -114,7 +166,7 @@ const AddInbound = () => {
                   label="Mã tài khoản"
                   fullWidth
                   margin="normal"
-                  value={accountId}
+                  value={user.uid}
                   disabled
                 />
                 <TextField
@@ -200,19 +252,20 @@ const AddInbound = () => {
 
             <Grid container spacing={2}>
               {filteredMenu.map((item) => (
-                <Grid item xs={4} md={2} key={item.id}>
+                <Grid item xs={6} md={4} key={item.id}>
                   <Card
                     className={classes.productCard}
                     onClick={() => handleAddItem(item)}
                   >
-                    <CardContent>
+                    <CardContent className={classes.cardContent} style={{
+                      padding: 0
+                    }}>
                       <img
                         src={item.image}
                         alt={item.name}
                         className={classes.image}
                       />
                       <Typography>{item.name}</Typography>
-                      {/* <Typography variant="caption">{item.unit}</Typography> */}
                     </CardContent>
                   </Card>
                 </Grid>

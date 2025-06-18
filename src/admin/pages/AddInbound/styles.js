@@ -18,13 +18,21 @@ export const useStyles = makeStyles(() => ({
       boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
     },
     textAlign: 'center',
-    height: '100%'
+    height: '100%',
+    padding: 0
+  },
+  cardContent: {
+    display: 'flex',
+    alignItems: 'center'
   },
   image: {
-    width: '100%',
-    height: 120,
+    width: '40%',
+    aspectRatio: 3/2,
     objectFit: 'cover',
-    borderRadius: 8,
-    marginBottom: 8,
+    marginRight: 8
   },
+
+  selectedItem: {
+    
+  }
 }));

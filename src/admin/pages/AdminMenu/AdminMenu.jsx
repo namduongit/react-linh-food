@@ -70,7 +70,7 @@ const AdminMenu = () => {
       temp = temp.filter(item => item.name?.toLowerCase().includes(nameFilter.toLowerCase()));
     }
     if (typeFilter) {
-      temp = temp.filter(item => item.type === typeFilter);
+      temp = temp.filter(item => item.category === typeFilter);
     }
     if (unitFilter) {
       temp = temp.filter(item => item.unit === unitFilter);
@@ -79,7 +79,7 @@ const AdminMenu = () => {
   }, [nameFilter, typeFilter, unitFilter, docs]);
 
   // Lấy danh sách loại và đơn vị (nếu có nhiều)
-  const typeOptions = [...new Set(docs.map(doc => doc.type).filter(Boolean))];
+  const typeOptions = [...new Set(docs.map(doc => doc.category).filter(Boolean))];
   const unitOptions = [...new Set(docs.map(doc => doc.unit).filter(Boolean))];
 
   return (
@@ -104,7 +104,7 @@ const AdminMenu = () => {
             <TextField
               select
               fullWidth
-              label="Lọc theo phân loại"
+              label="Lọc theo danh mục"
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value)}
             >
@@ -162,7 +162,7 @@ const AdminMenu = () => {
               <TableCell align="center">Mô tả</TableCell>
               <TableCell align="center">Đơn Giá</TableCell>
               <TableCell align="center">Danh mục</TableCell>
-              <TableCell align="center">Phân loại</TableCell>
+              <TableCell align="center">Còn lại</TableCell>
               <TableCell align="center">Đơn vị</TableCell>
               <TableCell align="center">Thao tác</TableCell>
             </TableRow>
@@ -191,7 +191,7 @@ const AdminMenu = () => {
                     <TableCell align="center">{doc.description || 'Không có mô tả'}</TableCell>
                     <TableCell align="center">{currencyFormat(doc.price)}</TableCell>
                     <TableCell align="center">{doc.category}</TableCell>
-                    <TableCell align="center">{doc.type}</TableCell>
+                    <TableCell align="center">{doc.quantity}</TableCell>
                     <TableCell align="center">{doc.unit}</TableCell>
                     <TableCell align="center">
                       <IconButton color="primary" onClick={() => handleEdit(doc.id)}>
