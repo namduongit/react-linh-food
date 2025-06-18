@@ -29,6 +29,7 @@ import Seat from './staff/pages/Seat/Seat';
 import StaffPayment from './staff/pages/StaffPayment/StaffPayment';
 import DineIn from './staff/pages/DineIn/DineIn';
 import StaffReserve from './staff/pages/StaffReserve/StaffReserve';
+import AdminInbound from './admin/pages/AdminInbound/AdminInbound';
 
 // Staff and management functions can be common
 import Orders from './staff/pages/Order/Orders';
@@ -45,6 +46,7 @@ import ZaloButton from './components/Zalo/ZaloButton';
 import { useState, useEffect } from 'react';
 import { useAuthState } from "react-firebase-hooks/auth";
 import { projectAuth, projectFirestore } from './firebase/config';
+import AddInbound from './admin/pages/AddInbound/AddInbound';
 
 function App() {
   let theme = createTheme();
@@ -100,6 +102,8 @@ function App() {
                       <Route exact path='/admin/seat' element={<Seat />} />
                       <Route exact path='/admin/payment' element={<StaffPayment />} />
                       <Route exact path='/admin/reserve' element={<StaffReserve />} />
+                      <Route exact path='/admin/inbound' element={<AdminInbound />} />
+                      <Route exact path='/admin/add-inbound' element={<AddInbound />} />
                     </>
                   )
                 }

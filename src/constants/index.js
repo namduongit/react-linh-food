@@ -176,10 +176,10 @@ export const adminItems = [
         label: 'Khách đặt bàn',
         value: 'reserve',
     },
-    // {
-    //     label: 'Cơ sở',
-    //     value: 'facility'
-    // }
+    {
+        label: 'Phiếu nhập',
+        value: 'inbound'
+    }
 ]
 
 export const staffItems = [
