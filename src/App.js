@@ -129,6 +129,11 @@ function App() {
 
   }, [docs, outOfStock])
 
+  const [data, setData] = useState([]);
+  useEffect(() => {
+    
+  })
+
   return (
     <CartProvider>
       <Router>

@@ -14,150 +14,81 @@ import { useStyles } from './styles';
 
 import { useNavigate } from 'react-router-dom';
 
+import { showNotification } from '../../../services/showNotification';
+import { toast } from '../../../services/toast';
+
 
 const AdminTotal = () => {
   const classes = useStyles();
   const [orders, setOrders] = useState([]);
   const [dineIn, setDineIn] = useState([]);
+
+  const [filterOrders, setFilterOrders] = useState([])
+  const [filterDineIn, setFilterDineIn] = useState([])
+
   const [bigTotalOrder, setBigTotalOrder] = useState(0);
   const [bigTotalDineIn, setBigTotalDineIn] = useState(0);
+
   const [bigTotal, setBigTotal] = useState(0);
 
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [selectedDineInOrder, setSelectedDineInOrder] = useState(null);
 
-  const [filterProduct, setFilterProduct] = useState('');
-  const [sortBy, setSortBy] = useState('desc');
 
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
 
-  const now = dayjs();
-  const currentYear = now.year();
-  const [filterDay, setFilterDay] = useState('');
-  const [filterMonth, setFilterMonth] = useState(now.month() + 1);
-  const [filterYear, setFilterYear] = useState(currentYear);
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
 
   const navigate = useNavigate();
 
-
-  const getDaysInMonth = (month, year) => {
-    return new Date(year, month, 0).getDate();
-  };
-
-  const generateYears = () => {
-    const years = [];
-    for (let y = currentYear - 10; y <= currentYear; y++) {
-      years.push(y);
-    }
-    return years;
-  };
-
-  const getDateRange = () => {
-    if (filterDay && filterMonth && filterYear) {
-      const start = new Date(filterYear, filterMonth - 1, filterDay, 0, 0, 0);
-      const end = new Date(filterYear, filterMonth - 1, filterDay, 23, 59, 59, 999);
-      return { start, end };
-    }
-
-    if (filterMonth && filterYear) {
-      const start = new Date(filterYear, filterMonth - 1, 1, 0, 0, 0);
-      const end = new Date(filterYear, filterMonth, 0, 23, 59, 59, 999); // ngày cuối tháng
-      return { start, end };
-    }
-
-    if (filterYear) {
-      const start = new Date(filterYear, 0, 1, 0, 0, 0);
-      const end = new Date(filterYear, 11, 31, 23, 59, 59, 999);
-      return { start, end };
-    }
-
-    return null;
-  };
-
-
-  const isWithinDateRange = (dateValue, range) => {
-    let date;
-
-    if (typeof dateValue === 'string') {
-      const [time, datePart] = dateValue.split(' ');
-      const [hours, minutes, seconds] = time.split(':').map(Number);
-      const [day, month, year] = datePart.split('/').map(Number);
-
-      date = new Date(year, month - 1, day, hours, minutes, seconds);
-    } else if (dateValue instanceof Date) {
-      date = dateValue;
-    } else {
-      return false;
-    }
-
-    if (isNaN(date.getTime())) return false;
-
-    return date >= range.start && date <= range.end;
-  };
-
-
-  const applyFilters = (data, range) => {
-    let filtered = data.filter(doc => {
-      if (range && !isWithinDateRange(doc.date, range)) {
-        return false;
-      }
-      if (filterProduct) {
-        const search = filterProduct.toLowerCase();
-        const cart = doc.cart || [];
-        const found = cart.some(item => {
-          const name = item.name || item.subtitle || '';
-          return name.toLowerCase().includes(search);
-        });
-        return found;
-      }
-      return true;
-    });
-
-    filtered.sort((a, b) => {
-      const dateA = new Date(a.date);
-      const dateB = new Date(b.date);
-      return sortBy === 'asc' ? dateA - dateB : dateB - dateA;
-    });
-
-    return filtered;
-  };
-
-
-  const fetchData = async () => {
-    const range = getDateRange();
-
-    const [orderSnap, dineInSnap] = await Promise.all([
-      projectFirestore.collection('order').where('checked', '==', true).get(),
-      projectFirestore.collection('dinein').where('checked', '==', true).get()
-    ]);
-
-    const ordersRaw = orderSnap.docs.map(doc => {
-      const data = doc.data();
-      return { ...data, id: doc.id };
-    });
-    const dineInRaw = dineInSnap.docs.map(doc => {
-      const data = doc.data();
-      return { ...data, id: doc.id };
-    });
-
-
-    const filteredOrders = applyFilters(ordersRaw, range);
-    const filteredDineIn = applyFilters(dineInRaw, range);
-
-    setOrders(filteredOrders);
-    setDineIn(filteredDineIn);
-
-    const totalOrder = filteredOrders.reduce((sum, doc) => sum + (parseInt(doc.total) || 0), 0);
-    const totalDineIn = filteredDineIn.reduce((sum, doc) => sum + (parseInt(doc.total) || 0), 0);
-
-    setBigTotalOrder(totalOrder);
-    setBigTotalDineIn(totalDineIn);
-  };
-
   useEffect(() => {
-    fetchData();
-  }, [filterDay, filterMonth, filterYear, filterProduct, sortBy]);
+    const unsubOrder = projectFirestore.collection('order')
+      .where('status', '==', 'Đã hoàn thành')
+      .onSnapshot(snap => setOrders(snap.docs.map(doc => ({ id: doc.id, ...doc.data() }))));
+
+    const unsubDine = projectFirestore.collection('dinein')
+      .where('status', '==', 'Đã hoàn thành')
+      .onSnapshot(snap => setDineIn(snap.docs.map(doc => ({ id: doc.id, ...doc.data() }))));
+
+    return () => {
+      unsubOrder();
+      unsubDine();
+    }
+  }, []);
+
+
+  const isInDateRangle = (strDate) => {
+    const date = new Date(strDate);
+    const start = new Date(fromDate + 'T00:00:00');
+    const end = new Date(toDate + 'T23:59:59');
+    return date && date >= start && date <= end;
+  }
+
+
+  const handleAnalyze = () => {
+    if (!fromDate || !toDate) {
+      toast({
+        title: 'Thông báo', message: 'Vui lòng chọn ngày phù hợp', type: 'warning', duration: 30000
+      })
+      return
+    }
+
+    const orderData = orders.filter(doc => isInDateRangle(doc.date));
+    const dineInData = dineIn.filter(doc => isInDateRangle(doc.date));
+
+    setFilterOrders(orderData);
+    setFilterDineIn(dineInData);
+
+    const orderTotal = orderData.reduce((sum, item) => sum + (parseInt(item.total) || 0), 0);
+    const dineInTotal = dineInData.reduce((sum, item) => sum + (parseInt(item.total) || 0), 0);
+
+    setBigTotalOrder(orderTotal);
+    setBigTotalDineIn(dineInTotal);
+
+
+  }
 
   useEffect(() => {
     setBigTotal(bigTotalOrder + bigTotalDineIn);
@@ -226,80 +157,17 @@ const AdminTotal = () => {
         </Button>
       </Box>
 
-      <Box component={Paper} sx={{ p: 3, mb: 4 }}>
-        <Grid container spacing={2}>
-          <Grid item xs={12} sm={4}>
-            <FormControl fullWidth>
-              <InputLabel>Ngày</InputLabel>
-              <Select
-                value={filterDay}
-                onChange={(e) => setFilterDay(e.target.value)}
-                label="Ngày"
-              >
-                {filterMonth && filterYear &&
-                  [...Array(getDaysInMonth(filterMonth, filterYear)).keys()].map((d) => (
-                    <MenuItem key={d + 1} value={d + 1}>{d + 1}</MenuItem>
-                  ))}
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid item xs={6} sm={4}>
-            <FormControl fullWidth>
-              <InputLabel>Tháng</InputLabel>
-              <Select
-                value={filterMonth}
-                onChange={(e) => {
-                  setFilterMonth(e.target.value);
-                  setFilterDay('');
-                }}
-                label="Tháng"
-              >
-                {[...Array(12).keys()].map((m) => (
-                  <MenuItem key={m + 1} value={m + 1}>Tháng {m + 1}</MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid item xs={6} sm={4}>
-            <FormControl fullWidth>
-              <InputLabel>Năm</InputLabel>
-              <Select
-                value={filterYear}
-                onChange={(e) => {
-                  setFilterYear(e.target.value);
-                  setFilterDay('');
-                }}
-                label="Năm"
-              >
-                {generateYears().map((y) => (
-                  <MenuItem key={y} value={y}>{y}</MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
+      <Box component={Paper} sx={{ p: 3, mb: 4 }} display="flex" gap={2} flexWrap="wrap" mb={3}>
+        <TextField label="Từ ngày" type="date" InputLabelProps={{ shrink: true }}
+          value={fromDate} onChange={(e) => setFromDate(e.target.value)} />
 
-          <Grid item xs={12} sm={4}>
-            <TextField
-              label="Lọc theo món ăn"
-              fullWidth
-              value={filterProduct}
-              onChange={(e) => setFilterProduct(e.target.value)}
-            />
-          </Grid>
-          <Grid item xs={12} sm={4}>
-            <FormControl fullWidth>
-              <InputLabel>Sắp xếp</InputLabel>
-              <Select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
-                <MenuItem value="desc">Mới nhất</MenuItem>
-                <MenuItem value="asc">Cũ nhất</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
-        </Grid>
+        <TextField label="Đến ngày" type="date" InputLabelProps={{ shrink: true }}
+          value={toDate} onChange={(e) => setToDate(e.target.value)} />
+        <Button variant="contained" onClick={handleAnalyze}>Thống kê</Button>
       </Box>
 
-      {renderTable('Tổng doanh thu đơn vận chuyển', orders, setSelectedOrder)}
-      {renderTable('Tổng doanh thu đơn tại chỗ', dineIn, setSelectedDineInOrder)}
+      {renderTable('Tổng doanh thu đơn vận chuyển', filterOrders, setSelectedOrder)}
+      {renderTable('Tổng doanh thu đơn tại chỗ', filterDineIn, setSelectedDineInOrder)}
 
       <Divider sx={{ my: 4 }} />
       <Typography variant="h5" align="left" sx={{ fontWeight: 'bold', mb: 2 }}>
