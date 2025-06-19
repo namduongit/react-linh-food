@@ -33,6 +33,7 @@ const StaffOrder = () => {
     const [openDialog, setOpenDialog] = useState(false);
     const [selectedOrder, setSelectedOrder] = useState(null);
 
+
     const handleOpenDialog = (order) => {
         setSelectedOrder(order);
         setOpenDialog(true);
@@ -61,24 +62,55 @@ const StaffOrder = () => {
     }
 
     const handleStatus = async (event, id) => {
-        // projectFirestore.collection('order').doc(id).update("status", event.target.value);
-        if (event.target.value === 'Đã hoàn thành') {
-            const confirm = await showNotification('Hoàn tất đơn hàng ?');
-            if (confirm) {
-                projectFirestore.collection('order').doc(id).update("checked", true)
-            } else {
-                projectFirestore.collection('order').doc(id).update({
-                    checked: false,
-                    status: 'Nhà hàng đang chuẩn bị món'
-                })
-            }
-        } else {
-            projectFirestore.collection('order').doc(id).update({
-                checked: false,
-                status: event.target.value
+        const newStatus = event.target.value;
+        const confirm = await showNotification('Thay đổi trạng thái đơn hàng ?');
+        if (!confirm) return;
+
+        // Tìm đơn hàng đang thay đổi
+        const order = docs.find((doc) => doc.id === id);
+
+        if (!order) {
+            toast({
+                title: 'Lỗi',
+                message: 'Không tìm thấy đơn hàng để cập nhật',
+                type: 'error',
+                duration: 3000
             });
+            return;
         }
-    }
+
+        // Nếu đơn hàng chuyển sang "Đã hoàn thành" thì cập nhật số lượng
+        if (newStatus === 'Đã hoàn thành') {
+            const batch = projectFirestore.batch();
+
+            for (const item of order.cart) {
+                const menuRef = projectFirestore.collection('menu').doc(item.menuId);
+                const menuSnap = await menuRef.get();
+                if (menuSnap.exists) {
+                    const currentQuantity = menuSnap.data().quantity || 0;
+                    const updatedQuantity = currentQuantity - item.quantity;
+
+                    batch.update(menuRef, { quantity: updatedQuantity < 0 ? 0 : updatedQuantity });
+                }
+            }
+
+            await batch.commit();
+        }
+
+        // Cập nhật trạng thái đơn hàng
+        await projectFirestore.collection('order').doc(id).update({
+            checked: newStatus === 'Đã hoàn thành',
+            status: newStatus
+        });
+
+        toast({
+            title: 'Thông báo',
+            message: 'Cập nhật trạng thái đơn hàng thành công',
+            type: 'success',
+            duration: 3000
+        });
+    };
+
 
     useEffect(() => {
         projectFirestore.collection('order')
@@ -95,6 +127,7 @@ const StaffOrder = () => {
                 setDocs(documents)
             })
     }, [setDocs])
+
 
     return (
         <Container sx={{ mb: 6 }}>
@@ -136,7 +169,6 @@ const StaffOrder = () => {
                                 key={doc.id}
                                 sx={{
                                     backgroundColor: doc.checked ? '#e8f5e9' : 'white',
-                                    '&:hover': { backgroundColor: '#f9f9f9' }
                                 }}
                             >
                                 <TableCell align="center">{doc.name}</TableCell>
@@ -152,7 +184,9 @@ const StaffOrder = () => {
                                         select
                                         size="small"
                                         value={doc.status}
-                                        onChange={(event) => handleStatus(event, doc.id)}
+                                        onChange={(event) => {
+                                            handleStatus(event, doc.id);
+                                        }}
                                         sx={{ minWidth: 180 }}
                                     >
                                         {statusArray.map((status, index) => (
@@ -170,7 +204,9 @@ const StaffOrder = () => {
                                     <Button
                                         variant="outlined"
                                         size="small"
-                                        onClick={() => handleOpenDialog(doc)}
+                                        onClick={() => {
+                                            handleOpenDialog(doc);
+                                        }}
                                     >
                                         Chi tiết
                                     </Button>

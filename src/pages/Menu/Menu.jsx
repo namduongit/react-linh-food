@@ -19,6 +19,7 @@ const Menu = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const { category } = useParams();
 
+
     const itemsPerPage = 8;
     const count = Math.ceil(menu.length / itemsPerPage);
     const begin = (currentPage - 1) * itemsPerPage;
@@ -51,6 +52,9 @@ const Menu = () => {
         const unsubscribe = projectFirestore
             .collection('menu')
             .where('category', '==', category)
+            .where('availible', '==', true)
+            .where('quantity', '>=', 1)
+            .orderBy('quantity')
             .orderBy('price', 'asc')
             .onSnapshot(snapshot => {
                 const fetchedDocs = snapshot.docs.map(doc => ({
@@ -63,7 +67,6 @@ const Menu = () => {
         return () => unsubscribe();
     }, [category]);
 
-    // Cập nhật menu ban đầu mỗi khi docs thay đổi
     useEffect(() => {
         setMenu(docs);
         setCurrentPage(1);

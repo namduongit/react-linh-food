@@ -99,6 +99,7 @@ const AddInbound = () => {
     // Tạo phiếu nhập
     const docRef = await addDoc(collection(projectFirestore, 'inbound'), {
       uid: user.uid,
+      name: user.displayName,
       supplier: supplier,
       date: date,
       total: 0,
@@ -142,7 +143,6 @@ const AddInbound = () => {
   const filteredMenu = filterCategory
     ? menuItems.filter((item) => item.category === filterCategory)
     : menuItems;
-
 
 
   return (
@@ -200,7 +200,7 @@ const AddInbound = () => {
                       </Grid>
                       <Grid item xs={12} sm={3}>
                         <TextField
-                          type="number"
+                          type="text"
                           label="Số lượng"
                           fullWidth
                           value={item.quantity}
@@ -211,7 +211,7 @@ const AddInbound = () => {
                       </Grid>
                       <Grid item xs={12} sm={3}>
                         <TextField
-                          type="number"
+                          type="text"
                           label="Giá nhập"
                           fullWidth
                           value={item.price}

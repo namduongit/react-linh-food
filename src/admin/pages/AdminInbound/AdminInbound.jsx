@@ -36,10 +36,10 @@ const AdminInbound = () => {
   // Bộ lọc
   const [sortOrder, setSortOrder] = useState('');
   const [dateFilter, setDateFilter] = useState('');
-  const [status, setStatus] = useState('');
 
   const [openDialog, setOpenDialog] = useState(false);
   const [inboundDetails, setInboundDetails] = useState([]);
+  const [dataDetail, setDataDetail] = useState([]);
 
   const handleShowDetail = async (inboundId) => {
     const snap = await projectFirestore
@@ -207,13 +207,15 @@ const AdminInbound = () => {
               filteredDocs
                 .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                 .map((doc) => (
-                  <TableRow key={doc.id}>
+                  <TableRow key={doc.id} sx={{
+                    backgroundColor: doc.status == 'Đã hoàn thành' ? '#e8f5e9' : 'white',
+                  }}>
                     <TableCell align="center">{doc.id}</TableCell>
                     <TableCell align="center">
                       {dayjs(doc.date?.toDate?.() || doc.date).format('YYYY-MM-DD')}
                     </TableCell>
                     <TableCell align="center">{currencyFormat(doc.total)}</TableCell>
-                    <TableCell align="center">{doc.uid}</TableCell>
+                    <TableCell align="center">{doc.name}</TableCell>
                     <TableCell align="center">
                       <TextField
                         select
@@ -249,7 +251,10 @@ const AdminInbound = () => {
                       <Button
                         variant="outlined"
                         size="small"
-                        onClick={() => handleShowDetail(doc.id)}
+                        onClick={() => {
+                          handleShowDetail(doc.id);
+                          setDataDetail(doc);
+                        }}
                       >
                         Chi tiết
                       </Button>
@@ -281,6 +286,12 @@ const AdminInbound = () => {
       <Dialog open={openDialog} onClose={() => setOpenDialog(false)} maxWidth="md" fullWidth>
         <DialogTitle>Chi tiết phiếu nhập</DialogTitle>
         <DialogContent dividers>
+          <Typography><strong>ID:</strong> {dataDetail.id}</Typography>
+          <Typography><strong>Ngày:</strong> {dataDetail.date}</Typography>
+          <Typography><strong>Nhân viên nhập:</strong> {dataDetail.name}</Typography>
+          <Typography><strong>Tổng:</strong> {currencyFormat(dataDetail.total)} đ</Typography>
+          <Typography sx={{ mt: 2 }}><strong>Chi tiết hàng nhập:</strong></Typography>
+
           {inboundDetails.length > 0 ? (
             <MuiTable>
               <TableHead>

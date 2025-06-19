@@ -17,9 +17,14 @@ function AdminEdit() {
     const [description, setDescription] = useState('');
     const [price, setPrice] = useState('');
     const [type, setType] = useState('');
+    const [quantity, setQuantity] = useState('');
+    const [availible, setAvailible] = useState('');
     const [doc, setDoc] = useState([]);
     const [loading, setLoading] = useState(true);
     const classes = useStyles();
+
+    const [statusArray] = ['Bán hàng', 'Ẩn đi'];
+
 
     const handleSubmit = (event) => {
         event.preventDefault();
@@ -32,6 +37,7 @@ function AdminEdit() {
             type,
             unit,
             price,
+            availible
         });
         setName('');
         setCategory('');
@@ -40,6 +46,7 @@ function AdminEdit() {
         setPrice('');
         setUnit('');
         setType('');
+        setAvailible('');
         toast({
             title: 'Thông báo',
             message: 'Sửa sản phẩm thành công',
@@ -61,11 +68,13 @@ function AdminEdit() {
                 setPrice(doc.data().price);
                 setUnit(doc.data().unit);
                 setType(doc.data().type);
+                setQuantity(doc.data().quantity);
+                setAvailible(doc.data().availible);
             })
             .catch((err) => {
                 console.error(err);
             })
-    }, [setDoc, setName, setCategory, setDescription, setSubtitle, setPrice, setUnit])
+    }, [setDoc, setName, setCategory, setDescription, setSubtitle, setPrice, setUnit, setType, setQuantity, setAvailible])
 
     return (
         <Container maxWidth="sm" sx={{ py: 6 }}>
@@ -187,6 +196,30 @@ function AdminEdit() {
                                 onChange={(e) => setPrice(e.target.value)}
                                 required
                             />
+                            <TextField
+                                label="Số hàng còn lại"
+                                fullWidth
+                                type="number"
+                                // inputProps={{ min: 0 }}
+                                value={quantity}
+                                // onChange={(e) => setPrice(e.target.value)}
+                                disabled
+                            />
+                            <FormControl fullWidth required>
+                                <InputLabel>Hiển thị trên website</InputLabel>
+                                <Select
+                                    value={availible}
+                                    label="Hiển thị"
+                                    onChange={(e) => setAvailible(e.target.value)}
+                                >
+                                    <MenuItem key={true} value={true}>
+                                            Bán hàng
+                                    </MenuItem>
+                                    <MenuItem key={false} value={false}>
+                                            Dừng bán
+                                    </MenuItem>
+                                </Select>
+                            </FormControl>
 
                             <Box sx={{ textAlign: 'right', mt: 2 }}>
                                 <Button

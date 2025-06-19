@@ -18,6 +18,9 @@ const Features = ({ type, img }) => {
     useEffect(() => {
         projectFirestore.collection('menu')
             .where('category', '==', 'seafood')
+            .where('availible', '==', true)
+            .where('quantity', '>=', 1)
+            .orderBy('quantity')
             .orderBy('price', 'asc')
             .onSnapshot((snap) => {
                 let documents = [];

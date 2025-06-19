@@ -30,6 +30,9 @@ import StaffPayment from './staff/pages/StaffPayment/StaffPayment';
 import DineIn from './staff/pages/DineIn/DineIn';
 import StaffReserve from './staff/pages/StaffReserve/StaffReserve';
 import AdminInbound from './admin/pages/AdminInbound/AdminInbound';
+import AdminProfit from './admin/pages/AdminProfit/AdminProfit';
+
+import { deleteDoc, doc } from 'firebase/firestore';
 
 // Staff and management functions can be common
 import Orders from './staff/pages/Order/Orders';
@@ -47,6 +50,8 @@ import { useState, useEffect } from 'react';
 import { useAuthState } from "react-firebase-hooks/auth";
 import { projectAuth, projectFirestore } from './firebase/config';
 import AddInbound from './admin/pages/AddInbound/AddInbound';
+import { showNotification } from './services/showNotification';
+import { toast } from './services/toast';
 
 function App() {
   let theme = createTheme();
@@ -54,8 +59,10 @@ function App() {
   const [user] = useAuthState(projectAuth);
   const [role, setRole] = useState([]);
 
-  useEffect(() => {
+  const [docs, setDocs] = useState([]);
+  const [outOfStock, setOutOfStock] = useState([]);
 
+  useEffect(() => {
     if (user != null) {
       projectFirestore.collection('users')
         .where('uid', '==', user.uid)
@@ -67,6 +74,60 @@ function App() {
     } else setRole(null)
   }, [user]);
 
+  useEffect(() => {
+    if (user != null) {
+      projectFirestore.collection('menu')
+        .where('quantity', '<=', 0)
+        .orderBy('quantity')
+        .orderBy('price', 'asc')
+        .onSnapshot(snap => {
+          let documents = [];
+          snap.forEach(doc => {
+            documents.push({
+              ...doc.data(),
+              id: doc.id
+            })
+          })
+          setOutOfStock(documents)
+        });
+      projectFirestore.collection('cart')
+        .where('uid', '==', user.uid)
+        .onSnapshot((snap) => {
+          let documents = [];
+          snap.forEach(doc => {
+            documents.push({
+              ...doc.data(),
+              id: doc.id
+            })
+          });
+          setDocs(documents)
+        })
+    }
+  }, [user]);
+
+  // Xử lý bỏ hàng đó ra khỏi giỏ
+  useEffect(() => {
+    var dataCheck = [];
+    outOfStock.forEach(outItem => {
+      docs.forEach(doc => {
+        if (outItem.id == doc.menuId) dataCheck.push(doc);
+      })
+    })
+
+
+    if (dataCheck.length > 0) {
+      dataCheck.forEach(async data => {
+        await deleteDoc(doc(projectFirestore, 'cart', data.id))
+      })
+      toast({
+        title: 'Thông báo',
+        message: 'Xóa các sản phẩm hết hàng trong giỏ hàng',
+        type: 'success',
+        duration: 3000
+      })
+    }
+
+  }, [docs, outOfStock])
 
   return (
     <CartProvider>
@@ -91,7 +152,7 @@ function App() {
 
                 {/* admin path */}
                 {
-                  role === 'admin' && (
+                  role === 'admin' && ( 
                     <>
                       <Route exact path="/admin/add-menu" element={<AdminMain />} />
                       <Route exact path='/admin/menu' element={<AdminMenu />} />
@@ -104,6 +165,7 @@ function App() {
                       <Route exact path='/admin/reserve' element={<StaffReserve />} />
                       <Route exact path='/admin/inbound' element={<AdminInbound />} />
                       <Route exact path='/admin/add-inbound' element={<AddInbound />} />
+                      <Route exact path='/admin/profit' element={<AdminProfit />} />
                     </>
                   )
                 }

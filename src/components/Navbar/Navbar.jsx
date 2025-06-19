@@ -162,7 +162,7 @@ const Navbar = () => {
                         </IconButton>
 
                         {/* Giỏ hàng cho user & staff */}
-                        {(role === 'user' || role === 'staff') && (
+                        {(role === 'user' || role === 'staff' || role === 'admin') && (
                             <IconButton
                                 edge="end"
                                 color="inherit"

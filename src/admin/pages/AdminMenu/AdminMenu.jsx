@@ -17,6 +17,14 @@ import { useNavigate } from 'react-router-dom';
 import { showNotification } from '../../../services/showNotification';
 import { toast } from '../../../services/toast';
 
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions
+} from '@mui/material';
+
+
 const AdminMenu = () => {
   const classes = useStyles();
   const [page, setPage] = useState(0);
@@ -25,10 +33,16 @@ const AdminMenu = () => {
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const navigate = useNavigate();
 
+  const [outOfStockDocs, setOutOfStockDocs] = useState([]);
+
   // Bộ lọc
   const [nameFilter, setNameFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
   const [unitFilter, setUnitFilter] = useState('');
+
+  // Dialog
+  const [openDialog, setOpenDialog] = useState(false);
+
 
   const handleChangePage = (event, newPage) => setPage(newPage);
 
@@ -63,7 +77,12 @@ const AdminMenu = () => {
     return () => unsubscribe();
   }, []);
 
-  // Apply filter
+  useEffect(() => {
+    const documents = docs.filter(doc => doc.quantity <= 0);
+    setOutOfStockDocs(documents);
+  }, [docs])
+
+
   useEffect(() => {
     let temp = [...docs];
     if (nameFilter) {
@@ -82,11 +101,12 @@ const AdminMenu = () => {
   const typeOptions = [...new Set(docs.map(doc => doc.category).filter(Boolean))];
   const unitOptions = [...new Set(docs.map(doc => doc.unit).filter(Boolean))];
 
+
   return (
-    <Container sx={{marginBottom: '20px'}}>
+    <Container sx={{ marginBottom: '20px' }}>
       <Typography variant="h4" fontWeight="bold" gutterBottom>
-                Quản lý thực đơn
-            </Typography>
+        Quản lý thực đơn
+      </Typography>
 
       {/* Bộ lọc tìm kiếm */}
       <Paper sx={{ p: 2, mb: 3 }}>
@@ -146,6 +166,9 @@ const AdminMenu = () => {
 
       {/* Nút Thêm thực đơn */}
       <Box sx={{ mb: 2, textAlign: 'right' }}>
+        {outOfStockDocs.length > 0 && (
+          <Button variant="contained" onClick={() => setOpenDialog(true)}>Các sản phẩm hết hàng</Button>
+        )}
         <Button variant="contained" onClick={() => navigate('/admin/add-menu')}>
           Thêm thực đơn
         </Button>
@@ -227,6 +250,41 @@ const AdminMenu = () => {
           </TableFooter>
         </MuiTable>
       </TableContainer>
+
+      <Dialog open={openDialog} onClose={() => setOpenDialog(false)} maxWidth="md" fullWidth>
+        <DialogTitle>Các sản phẩm hết hàng</DialogTitle>
+        <DialogContent dividers>
+          <Typography>Các sản phẩm đang bán mà hết hàng sẽ không hiển thị</Typography>
+          {outOfStockDocs.length > 0 ? (
+            <MuiTable>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Tên món</TableCell>
+                  <TableCell>Danh mục</TableCell>
+                  <TableCell>Giá bán</TableCell>
+                  <TableCell>Trạng thái</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {outOfStockDocs.map((item) => (
+                  <TableRow key={item.id}>
+                    <TableCell>{item.name}</TableCell>
+                    <TableCell>{item.category}</TableCell>
+                    <TableCell>{currencyFormat(item.price)}</TableCell>
+                    <TableCell>{item.availible ? 'Đang bán' : 'Dừng bán'}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </MuiTable>
+          ) : (
+            <Typography>Không có dữ liệu chi tiết</Typography>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenDialog(false)}>Đóng</Button>
+        </DialogActions>
+      </Dialog>
+
     </Container>
   );
 

@@ -12,7 +12,6 @@ import { projectFirestore } from '../../../firebase/config';
 import { currencyFormat } from '../../../utils/currencyFormat';
 import { QRCodeCanvas } from 'qrcode.react';
 
-import dayjs from 'dayjs';
 
 
 const Seat = () => {
@@ -152,16 +151,20 @@ const Seat = () => {
 
     // Cập nhật tổng tiền cho Seat
     useEffect(() => {
-        seatState.forEach(seat => {
-            userBill.forEach(async bill => {
-                if (bill.seatID == seat.id) {
-                    await updateDoc(doc(projectFirestore, 'seat', seat.id), {
-                        total: bill.total,
-                    });
-                }
-            })
-        })
+        const updateSeatTotals = async () => {
+            for (const seat of seatState) {
+                const bill = userBill.find(b => b.seatID === seat.id);
+                const total = bill ? bill.total : 0;
+
+                await updateDoc(doc(projectFirestore, 'seat', seat.id), {
+                    total,
+                });
+            }
+        };
+
+        updateSeatTotals();
     }, [userBill, seatState]);
+
 
 
     return (

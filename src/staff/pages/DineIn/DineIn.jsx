@@ -20,6 +20,8 @@ import { toast } from '../../../services/toast';
 import { useNavigate } from 'react-router-dom';
 import { useLocation, Link } from 'react-router-dom';
 
+import { updateDoc, doc } from 'firebase/firestore';
+
 const DineIn = () => {
     const classes = useStyles();
     const statusArray = ["Chưa xác nhận", "Đã xác nhận", "Nhà hàng đang chuẩn bị món", "Đã hoàn thành"]
@@ -65,37 +67,54 @@ const DineIn = () => {
     }
 
     const handleStatus = async (event, id, seatID) => {
-        projectFirestore.collection('dinein').doc(id).update("status", event.target.value);
-        if (event.target.value === 'Đã hoàn thành') {
-            const confirm = await showNotification('Chắc chắn hoàn tất đơn hàng?');
-            if (confirm) {
-                projectFirestore.collection('dinein').doc(id).update("checked", true)
-                projectFirestore.collection('seat').doc(seatID).update({
-                    total: 0,
-                    available: true,
-                })
-                toast({
-                    title: 'Thông báo',
-                    message: `Hoàn tất đơn hàng ${id} thành công`,
-                    type: 'success',
-                    duration: 3000
-                })
+        const newStatus = event.target.value;
+        const confirm = await showNotification('Thay đổi trạng thái đơn hàng ?');
+        if (!confirm) return;
 
-            } else {
-                projectFirestore.collection('dinein').doc(id).update({
-                    checked: false,
-                    status: 'Nhà hàng đang chuẩn bị món'
-                })
-            }
-        } else {
-            projectFirestore.collection('dinein').doc(id).update({
-                checked: false,
-                status: event.target.value
+        const order = docs.find((doc) => doc.id === id);
+        if (!order) {
+            toast({
+                title: 'Lỗi',
+                message: 'Không tìm thấy đơn hàng để cập nhật',
+                type: 'error',
+                duration: 3000
             });
-            projectFirestore.collection('seat').doc(seatID).update({
-                available: false,
+            return;
+        }
+
+        if (newStatus === 'Đã hoàn thành') {
+            const batch = projectFirestore.batch();
+            for (const item of order.cart) {
+                const menuRef = projectFirestore.collection('menu').doc(item.menuId);
+                const menuSnap = await menuRef.get();
+                if (menuSnap.exists) {
+                    const currentQuantity = menuSnap.data().quantity || 0;
+                    const updatedQuantity = currentQuantity - item.quantity;
+
+                    batch.update(menuRef, { quantity: updatedQuantity < 0 ? 0 : updatedQuantity });
+                }
+            }
+            await batch.commit();
+        }
+
+        await projectFirestore.collection('dinein').doc(id).update({
+            checked: newStatus === 'Đã hoàn thành',
+            status: newStatus
+        });
+
+        if (newStatus === 'Đã hoàn thành') {
+            await updateDoc(doc(projectFirestore, 'seat', seatID), {
+                total: 0,
+                status: 'Trống'
             })
         }
+
+        toast({
+            title: 'Thông báo',
+            message: 'Cập nhật trạng thái đơn hàng thành công',
+            type: 'success',
+            duration: 3000
+        });
     }
 
     useEffect(() => {
@@ -178,7 +197,6 @@ const DineIn = () => {
                                 key={doc.id}
                                 sx={{
                                     backgroundColor: doc.checked ? '#e8f5e9' : 'white',
-                                    '&:hover': { backgroundColor: '#f9f9f9' },
                                 }}
                             >
                                 <TableCell align="center">{doc.seat}</TableCell>

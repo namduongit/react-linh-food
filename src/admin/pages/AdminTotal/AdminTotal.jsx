@@ -12,6 +12,9 @@ import { currencyFormat } from '../../../utils/currencyFormat';
 import dayjs from 'dayjs';
 import { useStyles } from './styles';
 
+import { useNavigate } from 'react-router-dom';
+
+
 const AdminTotal = () => {
   const classes = useStyles();
   const [orders, setOrders] = useState([]);
@@ -34,6 +37,9 @@ const AdminTotal = () => {
   const [filterDay, setFilterDay] = useState('');
   const [filterMonth, setFilterMonth] = useState(now.month() + 1);
   const [filterYear, setFilterYear] = useState(currentYear);
+
+  const navigate = useNavigate();
+
 
   const getDaysInMonth = (month, year) => {
     return new Date(year, month, 0).getDate();
@@ -213,7 +219,9 @@ const AdminTotal = () => {
         Thống kê doanh thu
       </Typography>
       <Box sx={{ mb: 2, textAlign: 'left' }}>
-        <Button variant="contained">
+        <Button variant="contained" onClick={() => {
+          navigate(`/admin/profit`);
+        }}>
           Thống kê lợi nhuận
         </Button>
       </Box>
