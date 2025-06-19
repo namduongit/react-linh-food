@@ -22,7 +22,7 @@ import { useLocation, Link } from 'react-router-dom';
 
 const StaffOrder = () => {
     const classes = useStyles();
-    const statusArray = ["Chưa xác nhận", "Đã xác nhận", "Nhà hàng đang chuẩn bị món", "Đang giao hàng", "Đã giao hàng", "Đã hoàn thành"]
+    const statusArray = ["Chưa xác nhận", "Đã xác nhận", "Đã hủy", "Nhà hàng đang chuẩn bị món", "Đang giao hàng", "Đã giao hàng", "Đã hoàn thành"]
     const [page, setPage] = useState(0);
     const [docs, setDocs] = useState([]);
     const [rowsPerPage, setRowsPerPage] = useState(5);
@@ -99,7 +99,7 @@ const StaffOrder = () => {
 
         // Cập nhật trạng thái đơn hàng
         await projectFirestore.collection('order').doc(id).update({
-            checked: newStatus === 'Đã hoàn thành',
+            checked: newStatus === 'Đã hoàn thành' || newStatus === 'Đã hủy',
             status: newStatus
         });
 
@@ -193,7 +193,7 @@ const StaffOrder = () => {
                                             <MenuItem
                                                 key={index}
                                                 value={status}
-                                                disabled={doc.status === 'Đã hoàn thành'}
+                                                disabled={doc.status === 'Đã hoàn thành' || doc.status === 'Đã hủy'}
                                             >
                                                 {status}
                                             </MenuItem>

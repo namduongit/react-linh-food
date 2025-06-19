@@ -8,6 +8,8 @@ import {
 import { projectFirestore } from '../../../firebase/config';
 import { currencyFormat } from '../../../utils/currencyFormat';
 
+import { toast } from '../../../services/toast.js';
+
 const AdminProfit = () => {
     const [fromDate, setFromDate] = useState('');
     const [toDate, setToDate] = useState('');
@@ -25,6 +27,8 @@ const AdminProfit = () => {
 
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
+
+    const [stock, setStock] = useState(0);
 
     useEffect(() => {
         const fetchMenu = async () => {
@@ -70,7 +74,13 @@ const AdminProfit = () => {
     };
 
     const handleAnalyze = () => {
-        if (!fromDate || !toDate) return alert('Vui lòng chọn khoảng ngày.');
+        if (!fromDate || !toDate) {
+            toast({
+                title: 'Thông báo', message: 'Vui lòng chọn ngày phù hợp', type: 'warning', duration: 30000
+            })
+            return
+
+        }
 
         const inboundInRange = inboundData.filter(doc => isInDateRange(doc.date));
         const inboundIds = inboundInRange.map(doc => doc.id);
@@ -95,19 +105,22 @@ const AdminProfit = () => {
         let totalRevenue = 0;
         let totalCostAll = 0;
 
+        let reduces = 0;
         menuData.forEach(menu => {
             if (category && menu.category !== category) return;
 
-            const price = Number(menu.price || 0);
+            const price = Number(menu.price || 0); 
             const inbounds = inboundMap[menu.id] || [];
 
-            const totalImportedQty = inbounds.reduce((sum, i) => sum + i.quantity, 0); // Tổng số lượng nhập
-            const totalImportedCost = inbounds.reduce((sum, i) => sum + i.quantity * i.price, 0); // Tổng tiền nhập
+            const totalImportedQty = inbounds.reduce((sum, i) => sum + i.quantity, 0);
+            const totalImportedCost = inbounds.reduce((sum, i) => sum + i.quantity * i.price, 0); 
 
             const sales = saleMap[menu.id] || { quantity: 0, totalRevenue: 0 };
             const remainingQty = totalImportedQty - sales.quantity;
 
+
             const expectedRevenue = sales.quantity * price;
+
             const profit = expectedRevenue - totalImportedCost;
 
             totalRevenue += sales.totalRevenue;
@@ -124,6 +137,7 @@ const AdminProfit = () => {
                     profit,
                 });
             }
+            reduces += menu.quantity;
         });
 
         setProfitData(result);
@@ -132,6 +146,8 @@ const AdminProfit = () => {
             cost: totalCostAll,
             profit: totalRevenue - totalCostAll
         });
+
+        setStock(reduces);
     };
 
     return (
@@ -160,6 +176,11 @@ const AdminProfit = () => {
                 <Typography><strong>Tổng doanh thu:</strong> {currencyFormat(totals.revenue)} đ</Typography>
                 <Typography><strong>Tổng giá vốn:</strong> {currencyFormat(totals.cost)} đ</Typography>
                 <Typography><strong>Lợi nhuận:</strong> {currencyFormat(totals.profit)} đ</Typography>
+                {totals.profit < 0 && (
+                <Typography>Hiện tại đang lỗ bạn nên coi điều chỉnh lại để có lợi nhuận</Typography>
+                )}
+                <Divider sx={{ my: 2 }} />
+                <Typography><strong>Số sản phẩm còn trong kho:</strong> {currencyFormat(stock)}</Typography>
                 <Divider sx={{ my: 2 }} />
             </Box>
 
