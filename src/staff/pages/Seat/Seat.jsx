@@ -12,6 +12,7 @@ import { projectFirestore } from '../../../firebase/config';
 import { currencyFormat } from '../../../utils/currencyFormat';
 import { QRCodeCanvas } from 'qrcode.react';
 
+import dayjs from 'dayjs';
 
 
 const Seat = () => {
@@ -30,8 +31,13 @@ const Seat = () => {
 
 
     const [sortOrder, setSortOrder] = useState('asc');
+
     const [selectedSeat, setSelectedSeat] = useState(null);
     const [openDialog, setOpenDialog] = useState(false);
+
+    const [openDetailSeat, setOpenDetailSeat] = useState(false);
+    const [seatDatas, setSeatData] = useState([]);
+    const [findSeatData, setFindSeatData] = useState([]);
 
     const handleEditSeat = (seat) => {
         setSelectedSeat(seat);
@@ -148,24 +154,37 @@ const Seat = () => {
         });
     }, [seatState]);
 
+    useEffect(() => {
+        if (!seatDatas || !seatDatas.id) {
+            setFindSeatData({});
+            return;
+        }
+
+        const data = userBill.find(item => item.seatID === seatDatas.id);
+        if (data) {
+            setFindSeatData(data);
+            setOpenDetailSeat(true);
+        } else {
+            setFindSeatData({});
+            setOpenDetailSeat(false);
+        }
+    }, [seatDatas, userBill]);
+
 
     // Cập nhật tổng tiền cho Seat
     useEffect(() => {
-        const updateSeatTotals = async () => {
-            for (const seat of seatState) {
-                const bill = userBill.find(b => b.seatID === seat.id);
-                const total = bill ? bill.total : 0;
-
-                await updateDoc(doc(projectFirestore, 'seat', seat.id), {
-                    total,
-                });
-            }
-        };
-
-        updateSeatTotals();
+        seatState.forEach(seat => {
+            userBill.forEach(async bill => {
+                if (bill.seatID == seat.id) {
+                    await updateDoc(doc(projectFirestore, 'seat', seat.id), {
+                        total: bill.total,
+                    });
+                }
+            })
+        })
     }, [userBill, seatState]);
 
-
+    console.log(userBill)
 
     return (
         <Container className={classes.root} sx={{ marginBottom: '50px' }}>
@@ -254,6 +273,7 @@ const Seat = () => {
                                 <Box
                                     onClick={() => {
                                         handleEditSeat(seat);
+                                        setSeatData(seat);
                                     }}
                                     p={2}
                                     borderRadius={2}
@@ -289,7 +309,7 @@ const Seat = () => {
                     </Grid>
                 </Grid>
             </Grid>
-
+            {/* Dialog khi chọn nút sửa */}
             <Dialog open={openDialog} onClose={() => setOpenDialog(false)} onKeyDown={(e) => e.key === 'Enter' && handleSaveEdit()}>
                 <DialogTitle>Chỉnh sửa bàn</DialogTitle>
                 <DialogContent>
@@ -325,6 +345,46 @@ const Seat = () => {
                     <Button onClick={handleSaveEdit} variant="contained" color="primary">Lưu</Button>
                 </DialogActions>
             </Dialog>
+
+            {/* Dialog ấn vào xong hiển thị chi hóa đơn bàn đó */}
+            <Dialog open={openDetailSeat} onClose={() => setOpenDetailSeat(false)} maxWidth="sm" fullWidth>
+                <DialogTitle fontWeight="bold" fontSize={20}>
+                    Thông tin hóa đơn của bàn {selectedSeat?.name}
+                </DialogTitle>
+                <DialogContent dividers>
+                    <Box mb={2}>
+                        <Typography variant="subtitle1" fontWeight="bold">Tổng tiền:</Typography>
+                        <Typography variant="h5" color="primary" fontWeight="bold">
+                            {currencyFormat(findSeatData?.total || 0)} đ
+                        </Typography>
+                    </Box>
+
+                    {findSeatData?.cart?.length > 0 ? (
+                        <Box>
+                            <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+                                Danh sách món ăn
+                            </Typography>
+                            <ul style={{ paddingLeft: 20, margin: 0 }}>
+                                {findSeatData.cart.map((item, index) => (
+                                    <li key={index} style={{ marginBottom: 8 }}>
+                                        <Typography variant="body1">
+                                            <strong>{item.name}</strong> - SL: {item.quantity} - Giá: {currencyFormat(item.price)} -
+                                            Tổng: <strong>{currencyFormat(item.price * item.quantity)} đ</strong>
+                                        </Typography>
+                                    </li>
+                                ))}
+                            </ul>
+                        </Box>
+                    ) : (
+                        <Typography color="text.secondary">Chưa có dữ liệu món ăn cho bàn này.</Typography>
+                    )}
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setOpenDetailSeat(false)} color="secondary">Đóng</Button>
+                    <Button variant="contained" color="primary">In hóa đơn</Button>
+                </DialogActions>
+            </Dialog>
+
         </Container>
 
     );
