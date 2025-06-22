@@ -21,7 +21,7 @@ function AdminEdit() {
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState('');
   const [type, setType] = useState('');
-  const [quantity, setQuantity] = useState('');
+  const [quantity, setQuantity] = useState(0);
   const [availible, setAvailible] = useState(true);
 
   const [categories, setCategories] = useState([]);
@@ -46,7 +46,7 @@ function AdminEdit() {
       setUnit(menuData.unit || '');
       setPrice(menuData.price || '');
       setType(menuData.type || '');
-      setQuantity(menuData.quantity || '');
+      setQuantity(menuData.quantity || 0);
       setAvailible(menuData.availible ?? true);
 
       const parse = (snap) => snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));

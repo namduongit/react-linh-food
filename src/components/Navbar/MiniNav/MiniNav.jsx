@@ -121,11 +121,27 @@ const MiniNav = () => {
                                             </MaterialLink>
                                         </MenuItem>
                                     ))}
+                                    <MenuItem
+                                        onClick={handleClose}
+                                        key={'contact'}
+                                        className={classes.menuItem}
+                                    >
+                                        <MaterialLink
+                                            underline="none"
+                                            color="inherit"
+                                            component={RouterLink}
+                                            to={`/menu/contact`}
+                                            className={classes.links}
+                                            sx={{ display: 'flex', alignItems: 'center' }}
+                                        >
+                                            <MinimizeIcon sx={{ mr: 1 }} />
+                                            Liên hệ
+                                        </MaterialLink>
+                                    </MenuItem>
                                 </Menu>
                             </>
                         )}
 
-                        {/* Theo vai trò hiện nav phù hợp */}
                         {role === 'admin' && renderNavItems(adminItems, 'admin')}
                         {role === 'staff' && renderNavItems(staffItems, 'staff')}
                         {role === 'user' && renderNavItems(items, 'user')}

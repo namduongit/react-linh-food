@@ -1,34 +1,37 @@
-import React from 'react'
-import { useStyles } from './styles';
-import { Container, Grid, Link as MaterialLink } from '@mui/material';
+import { useEffect, useState } from 'react';
+import { Container, Grid, Link as MuiLink } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
-import seafoodHotpot from '../../assets/seafood-hotpot.jpg';
-import appetizer from '../../assets/appetizer.jpg';
-import promotion from '../../assets/promotion.jpg';
-import sashimi from '../../assets/sashimi.jpg';
+import { projectFirestore } from '../../firebase/config';
 
 const Hero = () => {
-  const classes = useStyles();
+  const [items, setItems] = useState([]);
+
+  useEffect(() => {
+    const unsub = projectFirestore.collection('mainHeroes')
+      .where('active', '==', true)
+      .orderBy('order')
+      .onSnapshot((snap) => {
+        const docs = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setItems(docs);
+      });
+
+    return () => unsub();
+  }, []);
+
   return (
     <Container maxWidth="lg">
-      <Grid container spacing={3} className={classes.gridContainer}>
-        {[
-          { to: '/menu/hotpot', src: seafoodHotpot, alt: 'seafoodHotpot' },
-          { to: '/menu/side', src: appetizer, alt: 'appetizer' },
-          { to: '/menu/promotion', src: promotion, alt: 'promotion' },
-          { to: '/menu/sashimi', src: sashimi, alt: 'sashimi' },
-        ].map((item, index) => (
-          <Grid item xs={12} sm={6} key={index}>
-            <MaterialLink
+      <Grid container spacing={3}>
+        {items.map((item) => (
+          <Grid item xs={12} sm={6} key={item.id}>
+            <MuiLink
               underline="none"
               color="inherit"
               component={RouterLink}
-              to={item.to}
-              className={classes.links}
+              to={`/menu/${item.categoryId}`}
             >
               <img
-                src={item.src}
-                alt={item.alt}
+                src={item.image}
+                alt={item.title}
                 width="100%"
                 style={{
                   borderRadius: '12px',
@@ -39,13 +42,12 @@ const Hero = () => {
                 onMouseOver={e => (e.currentTarget.style.transform = 'scale(1.02)')}
                 onMouseOut={e => (e.currentTarget.style.transform = 'scale(1)')}
               />
-            </MaterialLink>
+            </MuiLink>
           </Grid>
         ))}
       </Grid>
     </Container>
   );
+};
 
-}
-
-export default Hero
+export default Hero;

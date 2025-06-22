@@ -1,22 +1,36 @@
-import React from 'react'
-import Hero from '../../components/Hero/Hero'
-import { useStyles } from './styles';
+import { useEffect, useState } from 'react';
 import { Box } from '@mui/material';
+import { projectFirestore } from '../../firebase/config';
+import Hero from '../../components/Hero/Hero';
 import Features from '../../components/Features/Features';
-import branding from '../../assets/branding.jpg';
-import shrimp from '../../assets/shrimp.jpg';
-import crab from '../../assets/crab.jpg';
 
 const Main = () => {
-  const classes = useStyles();
-  return (
-    <Box className={classes.container}>
-      <Hero />
-      <Features type="cá" img={branding}/>
-      <Features type="tôm" img={shrimp}/>
-      <Features type="cua" img={crab}/>
-    </Box>
-  )
-}
+  const [sections, setSections] = useState([]);
 
-export default Main
+  useEffect(() => {
+    const unsubscribe = projectFirestore.collection('featuredTypes')
+      .orderBy('order')
+      .onSnapshot((snap) => {
+        const data = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setSections(data);
+      });
+    return () => unsubscribe();
+  }, []);
+
+  return (
+    <Box>
+      <Hero />
+      {sections.map(section => (
+        <Features
+          key={section.id}
+          type={section.type}
+          categoryId={section.categoryId}
+          title={section.title}
+          img={section.image}
+        />
+      ))}
+    </Box>
+  );
+};
+
+export default Main;

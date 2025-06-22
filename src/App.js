@@ -23,11 +23,6 @@ import History from './pages/History/History';
 import CartProvider from './context/CartContext';
 import Reserve from './pages/Reserve/Reserve';
 import Results from './pages/Results/Results';
-import AdminInbound from './admin/pages/AdminInbound/AdminInbound';
-import AdminProfit from './admin/pages/AdminProfit/AdminProfit';
-import AddInbound from './admin/pages/AddInbound/AddInbound';
-import AdminKey from './admin/pages/AdminKey/AdminKey';
-import AdminSupplier from './admin/pages/AdminSupplier/AdminSupplier';
 
 // Admin Element
 import AdminMenu from './admin/pages/AdminMenu/AdminMenu';
@@ -35,6 +30,13 @@ import AdminEdit from './admin/pages/AdminEdit/AdminEdit';
 import AdminTotal from './admin/pages/AdminTotal/AdminTotal';
 import AdminRole from './admin/pages/AdminRole/AdminRole';
 import Accounts from './admin/pages/Member/Accounts';
+import AdminInbound from './admin/pages/AdminInbound/AdminInbound';
+import AdminProfit from './admin/pages/AdminProfit/AdminProfit';
+import AddInbound from './admin/pages/AddInbound/AddInbound';
+import AdminKey from './admin/pages/AdminKey/AdminKey';
+import AdminSupplier from './admin/pages/AdminSupplier/AdminSupplier';
+import AdminSupplierStats from './admin/pages/AdminSupplierStats/AdminSupplierStats';
+import AdminMainPage from './admin/pages/AdminMainPage/AdminMainPage';
 
 // Staff Element
 import Seat from './staff/pages/Seat/Seat';
@@ -43,24 +45,19 @@ import DineIn from './staff/pages/DineIn/DineIn';
 import Orders from './staff/pages/Order/Orders';
 import StaffReserve from './staff/pages/StaffReserve/StaffReserve';
 
-
-import { deleteDoc, doc } from 'firebase/firestore';
-
-// Page not Found
+// Component and Page
 import NotFound from './pages/NotFound/NotFound';
-
-// Contact Page
 import Contact from './pages/Contact/Contact';
-
-// Zalo icon
 import ZaloButton from './components/Zalo/ZaloButton';
+
+// Service
+import { toast } from './services/toast';
 
 import { useState, useEffect } from 'react';
 import { useAuthState } from "react-firebase-hooks/auth";
 import { projectAuth, projectFirestore } from './firebase/config';
+import { deleteDoc, doc } from 'firebase/firestore';
 
-// Service
-import { toast } from './services/toast';
 
 function App() {
   let theme = createTheme();
@@ -181,11 +178,13 @@ function App() {
                       <Route exact path='/admin/add-inbound' element={<AddInbound />} />
                       <Route exact path='/admin/profit' element={<AdminProfit />} />
                       <Route exact path='/admin/key-manager' element={<AdminKey />} />
-                      <Route exact path='/admin/supplier' element={<AdminSupplier />}></Route>
+                      <Route exact path='/admin/supplier' element={<AdminSupplier />} />
+                      <Route exact path='/admin/supplier-stats' element={<AdminSupplierStats />} />
+                      <Route exact path='/admin/main-page' element={<AdminMainPage />} />
                     </>
                   )
                 }
-
+                
                 {/* staff path */}
                 {
                   role === 'staff' && (

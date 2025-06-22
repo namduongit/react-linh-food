@@ -72,7 +72,7 @@ const AdminRole = () => {
     return (
         <Container maxWidth="lg" sx={{ mt: 4 }}>
             <Typography variant="h4" fontWeight="bold" gutterBottom>
-                Quản lý chỗ ngồi
+                Quản lý phân quyền
             </Typography>
 
             <Card>

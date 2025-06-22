@@ -14,7 +14,6 @@ import { useStyles } from './styles';
 
 import { useNavigate } from 'react-router-dom';
 
-import { showNotification } from '../../../services/showNotification';
 import { toast } from '../../../services/toast';
 
 
@@ -146,14 +145,19 @@ const AdminTotal = () => {
 
   return (
     <Container maxWidth="lg" className={classes.container}>
-      <Typography variant="h4" align="left" sx={{ mt: 4, mb: 3, fontWeight: 'bold' }}>
+      <Typography variant="h4" fontWeight="bold" gutterBottom>
         Thống kê doanh thu
       </Typography>
       <Box sx={{ mb: 2, textAlign: 'left' }}>
-        <Button variant="contained" onClick={() => {
+        <Button variant="contained" sx={{ mr: 2 }} onClick={() => {
           navigate(`/admin/profit`);
         }}>
           Thống kê lợi nhuận
+        </Button>
+        <Button variant='contained' onClick={() => {
+          navigate('/admin/supplier-stats');
+        }}>
+          Thống kê nhà cung cấp
         </Button>
       </Box>
 

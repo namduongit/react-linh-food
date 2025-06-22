@@ -10,6 +10,9 @@ import { currencyFormat } from '../../../utils/currencyFormat';
 
 import { toast } from '../../../services/toast.js';
 
+import { useNavigate } from 'react-router-dom';
+
+
 const AdminProfit = () => {
     const [fromDate, setFromDate] = useState('');
     const [toDate, setToDate] = useState('');
@@ -30,6 +33,9 @@ const AdminProfit = () => {
 
     const [stock, setStock] = useState(0);
     const [categories, setCategories] = useState({});
+
+    const navigate = useNavigate();
+
 
 
     useEffect(() => {
@@ -168,7 +174,21 @@ const AdminProfit = () => {
 
     return (
         <Container maxWidth="lg" sx={{ mb: 4 }}>
-            <Typography variant="h4" sx={{ mt: 4, mb: 2 }}>Thống kê lợi nhuận</Typography>
+            <Typography variant="h4" fontWeight="bold" gutterBottom>
+                Thống kê lợi nhuận
+            </Typography>
+            <Box sx={{ mb: 2, textAlign: 'left' }}>
+                <Button variant="contained" sx={{ mr: 2 }} onClick={() => {
+                    navigate(`/admin/total`);
+                }}>
+                    Thống kê doanh thu
+                </Button>
+                <Button variant='contained' onClick={() => {
+                    navigate('/admin/supplier-stats');
+                }}>
+                    Thống kê nhà cung cấp
+                </Button>
+            </Box>
 
             <Box display="flex" gap={2} flexWrap="wrap" mb={3}>
                 <TextField label="Từ ngày" type="date" InputLabelProps={{ shrink: true }}

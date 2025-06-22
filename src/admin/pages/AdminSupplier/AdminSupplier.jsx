@@ -118,7 +118,7 @@ const AdminSupplier = () => {
                   sx={{
                     border: selected?.id === sup.id ? '2px solid #1976d2' : 'none',
                     backgroundColor: selected?.id === sup.id ? '#e3f2fd' : 'inherit',
-                    transform: selected?.id === sup.id ? 'scale(1.03)' : 'none'
+                    height: '100%'
                   }}
                   onClick={() => handleSelect(sup)}
                 >

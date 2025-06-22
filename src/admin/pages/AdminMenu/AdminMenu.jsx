@@ -4,7 +4,7 @@ import {
   Container, Table as MuiTable, TableContainer, Paper, TableBody, TableCell,
   TableHead, TableRow, TableFooter, TablePagination, Button, Box, Grid,
   TextField, MenuItem, Typography, IconButton, Dialog, DialogTitle,
-  DialogContent, DialogActions
+  DialogContent, DialogActions, FormControl, InputLabel, Select
 } from '@mui/material';
 
 import { useState, useEffect } from 'react';
@@ -26,6 +26,8 @@ const AdminMenu = () => {
   const [nameFilter, setNameFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
   const [unitFilter, setUnitFilter] = useState('');
+  const [sortField, setSortField] = useState('');
+  const [sortOrder, setSortOrder] = useState('asc');
 
   const [categories, setCategories] = useState({});
   const [units, setUnits] = useState({});
@@ -49,7 +51,6 @@ const AdminMenu = () => {
 
   useEffect(() => {
     const unsubscribe = projectFirestore.collection('menu')
-      .orderBy('price', 'desc')
       .onSnapshot((snap) => {
         const documents = snap.docs.map(doc => ({ ...doc.data(), id: doc.id }));
         setDocs(documents);
@@ -94,8 +95,15 @@ const AdminMenu = () => {
     if (unitFilter) {
       temp = temp.filter(item => item.unit === unitFilter);
     }
+    if (sortField) {
+      temp.sort((a, b) => {
+        const valA = a[sortField] || 0;
+        const valB = b[sortField] || 0;
+        return sortOrder === 'asc' ? valA - valB : valB - valA;
+      });
+    }
     setFilteredDocs(temp);
-  }, [nameFilter, typeFilter, unitFilter, docs]);
+  }, [nameFilter, typeFilter, unitFilter, sortField, sortOrder, docs]);
 
   return (
     <Container sx={{ mb: 4 }}>
@@ -141,12 +149,42 @@ const AdminMenu = () => {
               ))}
             </TextField>
           </Grid>
+          <Grid item xs={12} sm={6}>
+            <FormControl fullWidth>
+              <InputLabel>Sắp xếp theo</InputLabel>
+              <Select
+                value={sortField}
+                label="Sắp xếp theo"
+                onChange={(e) => setSortField(e.target.value)}
+              >
+                <MenuItem value="">Mặc định</MenuItem>
+                <MenuItem value="price">Giá</MenuItem>
+                <MenuItem value="quantity">Số lượng</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <FormControl fullWidth>
+              <InputLabel>Thứ tự</InputLabel>
+              <Select
+                value={sortOrder}
+                label="Thứ tự"
+                onChange={(e) => setSortOrder(e.target.value)}
+              >
+                <MenuItem value="asc">Tăng dần</MenuItem>
+                <MenuItem value="desc">Giảm dần</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
         </Grid>
       </Paper>
 
       <Box sx={{ mb: 2, textAlign: 'right' }}>
         <Button variant="contained" onClick={() => navigate('/admin/key-manager')} sx={{ mr: 1 }}>
           Quản lý khóa
+        </Button>
+        <Button variant="contained" onClick={() => navigate('/admin/main-page')} sx={{ mr: 1 }}>
+          Quản lý trang chủ
         </Button>
         {outOfStockDocs.length > 0 && (
           <Button variant="contained" onClick={() => setOpenDialog(true)} sx={{ mr: 1 }}>
@@ -254,8 +292,10 @@ const AdminMenu = () => {
           <Button onClick={() => setOpenDialog(false)}>Đóng</Button>
         </DialogActions>
       </Dialog>
+
     </Container>
   );
 };
 
 export default AdminMenu;
+

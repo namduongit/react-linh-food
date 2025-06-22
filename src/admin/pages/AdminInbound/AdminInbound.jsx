@@ -184,7 +184,6 @@ const AdminInbound = () => {
         <Button variant='contained' onClick={() => navigate('/admin/supplier')}>Nhà cung cấp</Button>
       </Box>
 
-      {/* Bảng */}
       <TableContainer component={Paper} className={classes.container}>
         <MuiTable>
           <TableHead>

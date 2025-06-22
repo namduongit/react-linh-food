@@ -22,8 +22,8 @@ const AdminKey = () => {
   const [editKeyId, setEditKeyId] = useState(null);
   const [editValue, setEditValue] = useState({ value: '', categoryId: '' });
   const [filterCategory, setFilterCategory] = useState('');
+  const [menuItems, setMenuItems] = useState([]);
 
-  // Load dữ liệu của collection đang chọn
   useEffect(() => {
     const unsubscribe = projectFirestore.collection(activeCollection)
       .orderBy('value')
@@ -35,7 +35,15 @@ const AdminKey = () => {
     return () => unsubscribe();
   }, [activeCollection]);
 
-  // Load danh mục nếu là tab "types"
+  useEffect(() => {
+    const unsubscribe = projectFirestore.collection('menu')
+      .onSnapshot(snap => {
+        setMenuItems(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      });
+
+    return () => unsubscribe();
+  }, []);
+
   useEffect(() => {
     if (activeCollection !== 'types') return;
     const unsubscribe = projectFirestore.collection('categories')
@@ -48,8 +56,22 @@ const AdminKey = () => {
     return () => unsubscribe();
   }, [activeCollection]);
 
+  const isKeyInUse = (keyId) => {
+    if (activeCollection === 'categories') {
+      return menuItems.some(item => item.category === keyId);
+    } else if (activeCollection === 'types') {
+      return menuItems.some(item => item.type === keyId);
+    } else if (activeCollection === 'units') {
+      return menuItems.some(item => item.unit === keyId);
+    }
+    return false;
+  };
+
   const handleAdd = async () => {
     if (!newKey.value.trim()) return;
+
+    const confirm = await showNotification('Chắc chắn thêm thuộc tính này ?');
+    if (!confirm) return;
 
     const dataToAdd = { value: newKey.value.trim() };
     if (activeCollection === 'types' && newKey.categoryId) {
@@ -57,15 +79,21 @@ const AdminKey = () => {
     }
 
     await projectFirestore.collection(activeCollection).add(dataToAdd);
-    toast({ title: 'Thêm thành công', type: 'success' });
+    toast({ title: 'Thông báo', message: 'Thêm thành công', type: 'success' });
     setNewKey({ value: '', categoryId: '' });
   };
 
   const handleDelete = async (id) => {
+    if (isKeyInUse(id)) {
+      toast({ title: 'Không thể xóa', message: 'Khóa đang được sử dụng trong sản phẩm', type: 'error' });
+      return;
+    }
+
     const confirm = await showNotification('Bạn có chắc muốn xóa khóa này?');
     if (!confirm) return;
+
     await projectFirestore.collection(activeCollection).doc(id).delete();
-    toast({ title: 'Đã xóa', type: 'success' });
+    toast({ title: 'Thông báo', message: 'Xóa thuộc tính này thành công', type: 'success' });
   };
 
   const handleEdit = async (id) => {
@@ -81,7 +109,6 @@ const AdminKey = () => {
     toast({ title: 'Cập nhật thành công', type: 'success' });
   };
 
-  // Lọc nếu đang ở tab "types"
   const filteredKeys = keys.filter(k => {
     if (activeCollection !== 'types') return true;
     if (!filterCategory) return true;
@@ -90,9 +117,8 @@ const AdminKey = () => {
 
   return (
     <Container sx={{ mt: 4, mb: 4 }}>
-      <Typography variant="h4" gutterBottom>Quản lý Khóa</Typography>
+      <Typography variant="h4" fontWeight="bold" gutterBottom>Quản lý Khóa</Typography>
 
-      {/* Nút chuyển tab */}
       <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
         {Object.entries(keyCollections).map(([key, label]) => (
           <Button
@@ -110,12 +136,10 @@ const AdminKey = () => {
         ))}
       </Box>
 
-      {/* Hiển thị tiêu đề đang quản lý */}
       <Typography variant="h6" sx={{ mb: 2 }}>
         Đang quản lý: <strong>{keyCollections[activeCollection]}</strong>
       </Typography>
 
-      {/* Bộ lọc danh mục nếu là loại */}
       {activeCollection === 'types' && (
         <Box sx={{ mb: 2 }}>
           <TextField
@@ -133,9 +157,8 @@ const AdminKey = () => {
         </Box>
       )}
 
-      {/* Form thêm mới */}
       <Paper sx={{ p: 2, mb: 3 }}>
-        <Grid container spacing={2}>
+        <Grid container spacing={2} sx={{ display: 'flex', alignItems: 'center' }}>
           {activeCollection === 'types' && (
             <Grid item xs={5}>
               <TextField
@@ -165,7 +188,6 @@ const AdminKey = () => {
         </Grid>
       </Paper>
 
-      {/* Bảng danh sách */}
       <Paper sx={{ p: 2 }}>
         <Table>
           <TableHead>
@@ -182,9 +204,7 @@ const AdminKey = () => {
                   {editKeyId === key.id ? (
                     <TextField
                       value={editValue.value}
-                      onChange={(e) =>
-                        setEditValue(prev => ({ ...prev, value: e.target.value }))
-                      }
+                      onChange={(e) => setEditValue(prev => ({ ...prev, value: e.target.value }))}
                       fullWidth
                     />
                   ) : (
@@ -192,16 +212,13 @@ const AdminKey = () => {
                   )}
                 </TableCell>
 
-                {/* Hiển thị danh mục nếu là loại */}
                 {activeCollection === 'types' && (
                   <TableCell>
                     {editKeyId === key.id ? (
                       <TextField
                         select
                         value={editValue.categoryId}
-                        onChange={(e) =>
-                          setEditValue(prev => ({ ...prev, categoryId: e.target.value }))
-                        }
+                        onChange={(e) => setEditValue(prev => ({ ...prev, categoryId: e.target.value }))}
                         fullWidth
                       >
                         {categoryList.map(cat => (
