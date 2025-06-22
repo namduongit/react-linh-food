@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useStyles } from './styles';
-import { Card, CardActions, CardContent, Link as MaterialLink, CardMedia, Container, Grid, IconButton, Button, Typography, Box, TextareaAutosize, useRadioGroup } from '@mui/material';
+import { Card, CardActions, CardContent, Link as MaterialLink, CardMedia, Container, Grid, IconButton, Button, Typography, Box, TextareaAutosize } from '@mui/material';
 import { projectFirestore, projectAuth } from '../../firebase/config';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
@@ -17,8 +17,8 @@ const Cart = () => {
     const [docs, setDocs] = useState([]);
     const [total, setTotal] = useState(0);
     const [note, setNote] = useState('');
-
     const [role, setRole] = useState([]);
+    const [units, setUnits] = useState([]);
 
     const renderTotal = useCallback(() => {
         const total = docs.reduce((n, { price, quantity }) => n + (parseInt(price) * quantity), 0);
@@ -54,7 +54,6 @@ const Cart = () => {
             type: 'success',
             duration: 3000
         });
-
     }
 
     useEffect(() => {
@@ -81,11 +80,9 @@ const Cart = () => {
     useEffect(() => {
         if (user != null) {
             const userRef = projectFirestore.collection('users').where('uid', '==', user.uid);
-
             const getUser = async () => {
                 try {
                     const querySnapshot = await userRef.get();
-
                     if (!querySnapshot.empty) {
                         const doc = querySnapshot.docs[0];
                         setRole(doc.data().role);
@@ -98,12 +95,25 @@ const Cart = () => {
                     setRole(null);
                 }
             };
-
             getUser();
         } else {
             setRole(null);
         }
     }, [user]);
+
+    useEffect(() => {
+        const fetchUnits = async () => {
+            const snap = await projectFirestore.collection('units').get();
+            const data = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            setUnits(data);
+        };
+        fetchUnits();
+    }, []);
+
+    const getUnitLabel = (unitId) => {
+        const found = units.find(u => u.id === unitId);
+        return found ? found.value : unitId;
+    };
 
     return (
         <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
@@ -129,7 +139,7 @@ const Cart = () => {
                                     <CardContent sx={{ pb: 1 }}>
                                         <Typography variant="h6" noWrap>{cart.name}</Typography>
                                         <Typography variant="body2" color="text.secondary">
-                                            {currencyFormat(cart.price)} / {cart.unit}
+                                            {currencyFormat(cart.price)} / {getUnitLabel(cart.unit)}
                                         </Typography>
                                     </CardContent>
 
@@ -201,4 +211,4 @@ const Cart = () => {
     );
 }
 
-export default Cart
+export default Cart;

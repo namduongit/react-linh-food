@@ -184,7 +184,6 @@ const Seat = () => {
         })
     }, [userBill, seatState]);
 
-    console.log(userBill)
 
     return (
         <Container className={classes.root} sx={{ marginBottom: '50px' }}>

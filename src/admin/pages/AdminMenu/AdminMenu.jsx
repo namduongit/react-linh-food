@@ -1,32 +1,20 @@
-//material-ui
 import ClearIcon from '@mui/icons-material/Clear';
 import EditIcon from '@mui/icons-material/Edit';
 import {
   Container, Table as MuiTable, TableContainer, Paper, TableBody, TableCell,
-  TableHead, TableRow, TableFooter, TablePagination, ButtonGroup, Button,
-  Box, Grid, TextField, MenuItem, Typography, IconButton
+  TableHead, TableRow, TableFooter, TablePagination, Button, Box, Grid,
+  TextField, MenuItem, Typography, IconButton, Dialog, DialogTitle,
+  DialogContent, DialogActions
 } from '@mui/material';
-import { useStyles } from './styles';
-import { projectFirestore } from '../../../firebase/config';
-import { currencyFormat } from '../../../utils/currencyFormat'
 
-//react
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-
+import { projectFirestore } from '../../../firebase/config';
 import { showNotification } from '../../../services/showNotification';
 import { toast } from '../../../services/toast';
-
-import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions
-} from '@mui/material';
-
+import { currencyFormat } from '../../../utils/currencyFormat';
 
 const AdminMenu = () => {
-  const classes = useStyles();
   const [page, setPage] = useState(0);
   const [docs, setDocs] = useState([]);
   const [filteredDocs, setFilteredDocs] = useState([]);
@@ -35,17 +23,16 @@ const AdminMenu = () => {
 
   const [outOfStockDocs, setOutOfStockDocs] = useState([]);
 
-  // Bộ lọc
   const [nameFilter, setNameFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
   const [unitFilter, setUnitFilter] = useState('');
 
-  // Dialog
+  const [categories, setCategories] = useState({});
+  const [units, setUnits] = useState({});
+
   const [openDialog, setOpenDialog] = useState(false);
 
-
   const handleChangePage = (event, newPage) => setPage(newPage);
-
   const handleChangeRowsPerPage = (event) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
@@ -55,17 +42,10 @@ const AdminMenu = () => {
     const confirm = await showNotification('Bạn có chắc chắn xóa thực đơn này ?');
     if (!confirm) return;
     await projectFirestore.collection('menu').doc(id).delete();
-    toast({
-      title: 'Thông báo',
-      message: `Xóa thực đơn ${id} thành công`,
-      type: 'success',
-      duration: 3000
-    });
+    toast({ title: 'Thông báo', message: `Xóa thực đơn thành công`, type: 'success', duration: 3000 });
   };
 
-  const handleEdit = (id) => {
-    navigate(`/admin/edit-menu/${id}`);
-  };
+  const handleEdit = (id) => navigate(`/admin/edit-menu/${id}`);
 
   useEffect(() => {
     const unsubscribe = projectFirestore.collection('menu')
@@ -78,10 +58,30 @@ const AdminMenu = () => {
   }, []);
 
   useEffect(() => {
+    const fetchKeys = async () => {
+      const categorySnap = await projectFirestore.collection('categories').get();
+      const unitSnap = await projectFirestore.collection('units').get();
+
+      const categoryMap = {};
+      categorySnap.docs.forEach(doc => {
+        categoryMap[doc.id] = doc.data().value;
+      });
+
+      const unitMap = {};
+      unitSnap.docs.forEach(doc => {
+        unitMap[doc.id] = doc.data().value;
+      });
+
+      setCategories(categoryMap);
+      setUnits(unitMap);
+    };
+    fetchKeys();
+  }, []);
+
+  useEffect(() => {
     const documents = docs.filter(doc => doc.quantity <= 0);
     setOutOfStockDocs(documents);
-  }, [docs])
-
+  }, [docs]);
 
   useEffect(() => {
     let temp = [...docs];
@@ -97,25 +97,18 @@ const AdminMenu = () => {
     setFilteredDocs(temp);
   }, [nameFilter, typeFilter, unitFilter, docs]);
 
-  // Lấy danh sách loại và đơn vị (nếu có nhiều)
-  const typeOptions = [...new Set(docs.map(doc => doc.category).filter(Boolean))];
-  const unitOptions = [...new Set(docs.map(doc => doc.unit).filter(Boolean))];
-
-
   return (
-    <Container sx={{ marginBottom: '20px' }}>
+    <Container sx={{ mb: 4 }}>
       <Typography variant="h4" fontWeight="bold" gutterBottom>
         Quản lý thực đơn
       </Typography>
 
-      {/* Bộ lọc tìm kiếm */}
       <Paper sx={{ p: 2, mb: 3 }}>
         <Grid container spacing={2}>
           <Grid item xs={12} sm={4}>
             <TextField
               fullWidth
               label="Tìm theo tên món"
-              variant="outlined"
               value={nameFilter}
               onChange={(e) => setNameFilter(e.target.value)}
             />
@@ -129,8 +122,8 @@ const AdminMenu = () => {
               onChange={(e) => setTypeFilter(e.target.value)}
             >
               <MenuItem value="">Tất cả</MenuItem>
-              {typeOptions.map((type, i) => (
-                <MenuItem key={i} value={type}>{type}</MenuItem>
+              {Object.entries(categories).map(([id, label]) => (
+                <MenuItem key={id} value={id}>{label}</MenuItem>
               ))}
             </TextField>
           </Grid>
@@ -143,39 +136,29 @@ const AdminMenu = () => {
               onChange={(e) => setUnitFilter(e.target.value)}
             >
               <MenuItem value="">Tất cả</MenuItem>
-              {unitOptions.map((unit, i) => (
-                <MenuItem key={i} value={unit}>{unit}</MenuItem>
+              {Object.entries(units).map(([id, label]) => (
+                <MenuItem key={id} value={id}>{label}</MenuItem>
               ))}
             </TextField>
-          </Grid>
-          <Grid item xs={12} sm={12} textAlign="right">
-            <Button
-              variant="outlined"
-              color="secondary"
-              onClick={() => {
-                setNameFilter('');
-                setTypeFilter('');
-                setUnitFilter('');
-              }}
-            >
-              Xóa bộ lọc
-            </Button>
           </Grid>
         </Grid>
       </Paper>
 
-      {/* Nút Thêm thực đơn */}
       <Box sx={{ mb: 2, textAlign: 'right' }}>
+        <Button variant="contained" onClick={() => navigate('/admin/key-manager')} sx={{ mr: 1 }}>
+          Quản lý khóa
+        </Button>
         {outOfStockDocs.length > 0 && (
-          <Button variant="contained" onClick={() => setOpenDialog(true)}>Các sản phẩm hết hàng</Button>
+          <Button variant="contained" onClick={() => setOpenDialog(true)} sx={{ mr: 1 }}>
+            Món hết hàng
+          </Button>
         )}
         <Button variant="contained" onClick={() => navigate('/admin/add-menu')}>
-          Thêm thực đơn
+          Thêm món
         </Button>
       </Box>
 
-      {/* Bảng dữ liệu */}
-      <TableContainer component={Paper} className={classes.container}>
+      <TableContainer component={Paper}>
         <MuiTable>
           <TableHead>
             <TableRow>
@@ -183,7 +166,7 @@ const AdminMenu = () => {
               <TableCell align="center">Ảnh</TableCell>
               <TableCell align="center">Ghi chú</TableCell>
               <TableCell align="center">Mô tả</TableCell>
-              <TableCell align="center">Đơn Giá</TableCell>
+              <TableCell align="center">Giá</TableCell>
               <TableCell align="center">Danh mục</TableCell>
               <TableCell align="center">Còn lại</TableCell>
               <TableCell align="center">Đơn vị</TableCell>
@@ -193,44 +176,31 @@ const AdminMenu = () => {
 
           <TableBody>
             {filteredDocs.length > 0 ? (
-              filteredDocs
-                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                .map((doc) => (
-                  <TableRow key={doc.id}>
-                    <TableCell align="center">{doc.name}</TableCell>
-                    <TableCell align="center">
-                      <img
-                        src={doc.image}
-                        alt={doc.name}
-                        style={{
-                          width: 80,
-                          height: 80,
-                          objectFit: 'cover',
-                          borderRadius: 8,
-                        }}
-                      />
-                    </TableCell>
-                    <TableCell align="center">{doc.subtitle}</TableCell>
-                    <TableCell align="center">{doc.description || 'Không có mô tả'}</TableCell>
-                    <TableCell align="center">{currencyFormat(doc.price)}</TableCell>
-                    <TableCell align="center">{doc.category}</TableCell>
-                    <TableCell align="center">{doc.quantity}</TableCell>
-                    <TableCell align="center">{doc.unit}</TableCell>
-                    <TableCell align="center">
-                      <IconButton color="primary" onClick={() => handleEdit(doc.id)}>
-                        <EditIcon />
-                      </IconButton>
-                      <IconButton color="error" onClick={() => handleClear(doc.id)}>
-                        <ClearIcon />
-                      </IconButton>
-                    </TableCell>
-                  </TableRow>
-                ))
+              filteredDocs.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((doc) => (
+                <TableRow key={doc.id}>
+                  <TableCell align="center">{doc.name}</TableCell>
+                  <TableCell align="center">
+                    <img
+                      src={doc.image}
+                      alt={doc.name}
+                      style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 8 }}
+                    />
+                  </TableCell>
+                  <TableCell align="center">{doc.subtitle}</TableCell>
+                  <TableCell align="center">{doc.description || 'Không có mô tả'}</TableCell>
+                  <TableCell align="center">{currencyFormat(doc.price)}</TableCell>
+                  <TableCell align="center">{categories[doc.category] || '---'}</TableCell>
+                  <TableCell align="center">{doc.quantity}</TableCell>
+                  <TableCell align="center">{units[doc.unit] || '---'}</TableCell>
+                  <TableCell align="center">
+                    <IconButton color="primary" onClick={() => handleEdit(doc.id)}><EditIcon /></IconButton>
+                    <IconButton color="error" onClick={() => handleClear(doc.id)}><ClearIcon /></IconButton>
+                  </TableCell>
+                </TableRow>
+              ))
             ) : (
               <TableRow>
-                <TableCell align="center" colSpan={9}>
-                  Không có thực đơn phù hợp
-                </TableCell>
+                <TableCell align="center" colSpan={9}>Không có thực đơn phù hợp</TableCell>
               </TableRow>
             )}
           </TableBody>
@@ -238,7 +208,7 @@ const AdminMenu = () => {
           <TableFooter>
             <TableRow>
               <TablePagination
-                rowsPerPageOptions={[5, 10, 15, filteredDocs.length]}
+                rowsPerPageOptions={[5, 10, 15]}
                 count={filteredDocs.length}
                 rowsPerPage={rowsPerPage}
                 page={page}
@@ -269,7 +239,7 @@ const AdminMenu = () => {
                 {outOfStockDocs.map((item) => (
                   <TableRow key={item.id}>
                     <TableCell>{item.name}</TableCell>
-                    <TableCell>{item.category}</TableCell>
+                    <TableCell>{categories[item.category] || item.category}</TableCell>
                     <TableCell>{currencyFormat(item.price)}</TableCell>
                     <TableCell>{item.availible ? 'Đang bán' : 'Dừng bán'}</TableCell>
                   </TableRow>
@@ -284,10 +254,8 @@ const AdminMenu = () => {
           <Button onClick={() => setOpenDialog(false)}>Đóng</Button>
         </DialogActions>
       </Dialog>
-
     </Container>
   );
-
 };
 
 export default AdminMenu;

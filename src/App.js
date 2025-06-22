@@ -2,6 +2,15 @@ import './App.css';
 import Navbar from './components/Navbar/Navbar';
 import { ThemeProvider } from "@mui/styles";
 import { createTheme } from '@mui/material/styles';
+
+// Router
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+} from "react-router-dom";
+
+// User Element
 import Main from './pages/Main/Main';
 import Footer from './components/Footer/Footer';
 import AdminMain from './admin/pages/AdminMain/AdminMain'
@@ -12,30 +21,30 @@ import Payment from './pages/Payment/Payment';
 import Order from './pages/Order/Order';
 import History from './pages/History/History';
 import CartProvider from './context/CartContext';
+import Reserve from './pages/Reserve/Reserve';
+import Results from './pages/Results/Results';
+import AdminInbound from './admin/pages/AdminInbound/AdminInbound';
+import AdminProfit from './admin/pages/AdminProfit/AdminProfit';
+import AddInbound from './admin/pages/AddInbound/AddInbound';
+import AdminKey from './admin/pages/AdminKey/AdminKey';
+import AdminSupplier from './admin/pages/AdminSupplier/AdminSupplier';
 
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-} from "react-router-dom";
+// Admin Element
 import AdminMenu from './admin/pages/AdminMenu/AdminMenu';
 import AdminEdit from './admin/pages/AdminEdit/AdminEdit';
 import AdminTotal from './admin/pages/AdminTotal/AdminTotal';
 import AdminRole from './admin/pages/AdminRole/AdminRole';
 import Accounts from './admin/pages/Member/Accounts';
-import Reserve from './pages/Reserve/Reserve';
-import Results from './pages/Results/Results';
+
+// Staff Element
 import Seat from './staff/pages/Seat/Seat';
 import StaffPayment from './staff/pages/StaffPayment/StaffPayment';
 import DineIn from './staff/pages/DineIn/DineIn';
+import Orders from './staff/pages/Order/Orders';
 import StaffReserve from './staff/pages/StaffReserve/StaffReserve';
-import AdminInbound from './admin/pages/AdminInbound/AdminInbound';
-import AdminProfit from './admin/pages/AdminProfit/AdminProfit';
+
 
 import { deleteDoc, doc } from 'firebase/firestore';
-
-// Staff and management functions can be common
-import Orders from './staff/pages/Order/Orders';
 
 // Page not Found
 import NotFound from './pages/NotFound/NotFound';
@@ -49,8 +58,8 @@ import ZaloButton from './components/Zalo/ZaloButton';
 import { useState, useEffect } from 'react';
 import { useAuthState } from "react-firebase-hooks/auth";
 import { projectAuth, projectFirestore } from './firebase/config';
-import AddInbound from './admin/pages/AddInbound/AddInbound';
-import { showNotification } from './services/showNotification';
+
+// Service
 import { toast } from './services/toast';
 
 function App() {
@@ -171,6 +180,8 @@ function App() {
                       <Route exact path='/admin/inbound' element={<AdminInbound />} />
                       <Route exact path='/admin/add-inbound' element={<AddInbound />} />
                       <Route exact path='/admin/profit' element={<AdminProfit />} />
+                      <Route exact path='/admin/key-manager' element={<AdminKey />} />
+                      <Route exact path='/admin/supplier' element={<AdminSupplier />}></Route>
                     </>
                   )
                 }

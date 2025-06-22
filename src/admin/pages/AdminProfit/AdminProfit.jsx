@@ -29,6 +29,8 @@ const AdminProfit = () => {
     const [rowsPerPage, setRowsPerPage] = useState(10);
 
     const [stock, setStock] = useState(0);
+    const [categories, setCategories] = useState({});
+
 
     useEffect(() => {
         const fetchMenu = async () => {
@@ -38,6 +40,20 @@ const AdminProfit = () => {
             setMenuItems([...new Set(data.map(d => d.category))]);
         };
         fetchMenu();
+    }, []);
+
+    useEffect(() => {
+        const fetchKeys = async () => {
+            const categorySnap = await projectFirestore.collection('categories').get();
+
+            const categoryMap = {};
+            categorySnap.docs.forEach(doc => {
+                categoryMap[doc.id] = doc.data().value;
+            });
+
+            setCategories(categoryMap);
+        };
+        fetchKeys();
     }, []);
 
     useEffect(() => {
@@ -109,11 +125,11 @@ const AdminProfit = () => {
         menuData.forEach(menu => {
             if (category && menu.category !== category) return;
 
-            const price = Number(menu.price || 0); 
+            const price = Number(menu.price || 0);
             const inbounds = inboundMap[menu.id] || [];
 
             const totalImportedQty = inbounds.reduce((sum, i) => sum + i.quantity, 0);
-            const totalImportedCost = inbounds.reduce((sum, i) => sum + i.quantity * i.price, 0); 
+            const totalImportedCost = inbounds.reduce((sum, i) => sum + i.quantity * i.price, 0);
 
             const sales = saleMap[menu.id] || { quantity: 0, totalRevenue: 0 };
             const remainingQty = totalImportedQty - sales.quantity;
@@ -164,8 +180,8 @@ const AdminProfit = () => {
                     <Select value={category} label="Loại sản phẩm"
                         onChange={(e) => setCategory(e.target.value)} sx={{ minWidth: 160 }}>
                         <MenuItem value="">Tất cả</MenuItem>
-                        {menuItems.map((cat, idx) => (
-                            <MenuItem key={idx} value={cat}>{cat}</MenuItem>
+                        {Object.entries(categories).map(([id, label]) => (
+                            <MenuItem key={id} value={id}>{label}</MenuItem>
                         ))}
                     </Select>
                 </FormControl>
@@ -177,7 +193,7 @@ const AdminProfit = () => {
                 <Typography><strong>Tổng giá vốn:</strong> {currencyFormat(totals.cost)} đ</Typography>
                 <Typography><strong>Lợi nhuận:</strong> {currencyFormat(totals.profit)} đ</Typography>
                 {totals.profit < 0 && (
-                <Typography>Hiện tại đang lỗ bạn nên coi điều chỉnh lại để có lợi nhuận</Typography>
+                    <Typography>Hiện tại đang lỗ bạn nên coi điều chỉnh lại để có lợi nhuận</Typography>
                 )}
                 <Divider sx={{ my: 2 }} />
                 <Typography><strong>Số sản phẩm còn trong kho:</strong> {currencyFormat(stock)}</Typography>
@@ -198,17 +214,27 @@ const AdminProfit = () => {
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {profitData.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row, idx) => (
-                            <TableRow key={idx}>
-                                <TableCell>{row.name}</TableCell>
-                                <TableCell>{currencyFormat(row.price)} đ</TableCell>
-                                <TableCell>{row.sold}</TableCell>
-                                <TableCell>{currencyFormat(row.cost)} đ</TableCell>
-                                <TableCell>{currencyFormat(row.profit)} đ</TableCell>
-                                <TableCell>{row.imported}</TableCell>
-                                <TableCell>{row.remaining}</TableCell>
+                        {profitData.length > 0 ? (
+                            profitData
+                                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                                .map((row, idx) => (
+                                    <TableRow key={idx}>
+                                        <TableCell>{row.name}</TableCell>
+                                        <TableCell>{currencyFormat(row.price)} đ</TableCell>
+                                        <TableCell>{row.sold}</TableCell>
+                                        <TableCell>{currencyFormat(row.cost)} đ</TableCell>
+                                        <TableCell>{currencyFormat(row.profit)} đ</TableCell>
+                                        <TableCell>{row.imported}</TableCell>
+                                        <TableCell>{row.remaining}</TableCell>
+                                    </TableRow>
+                                ))
+                        ) : (
+                            <TableRow>
+                                <TableCell colSpan={7} align="center">
+                                    Không có thông tin phù hợp với điều kiện lọc
+                                </TableCell>
                             </TableRow>
-                        ))}
+                        )}
                     </TableBody>
                     <TableFooter>
                         <TableRow>

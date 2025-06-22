@@ -33,7 +33,6 @@ const AdminInbound = () => {
 
   const statusArray = ['Chưa xác nhận', 'Đã xác nhận', 'Đã nhận hàng', 'Hoàn đơn', 'Đã hoàn thành'];
 
-  // Bộ lọc
   const [sortOrder, setSortOrder] = useState('');
   const [dateFilter, setDateFilter] = useState('');
 
@@ -68,13 +67,10 @@ const AdminInbound = () => {
     const confirm = await showNotification('Bạn có chắc chắn xóa phiếu nhập này?');
     if (!confirm) return;
 
-    await projectFirestore.collection('inbounds').doc(id).delete();
+    await projectFirestore.collection('inbound').doc(id).delete();
     toast({ title: 'Thành công', message: 'Đã xóa phiếu nhập.', type: 'success' });
   };
 
-  // const handleEdit = (id) => {
-  //   navigate(`/admin/edit-inbound/${id}`);
-  // };
 
   const handleStatus = async (event, id) => {
     const confirm = await showNotification('Xác nhận thay đổi trạng thái ?');
@@ -180,11 +176,12 @@ const AdminInbound = () => {
         </Grid>
       </Paper>
 
-      {/* Nút Thêm phiếu nhập */}
+      
       <Box sx={{ mb: 2, textAlign: 'right' }}>
-        <Button variant="contained" onClick={() => navigate('/admin/add-inbound')}>
+        <Button variant="contained" onClick={() => navigate('/admin/add-inbound')} sx={{mr: 1}}>
           Thêm phiếu nhập
         </Button>
+        <Button variant='contained' onClick={() => navigate('/admin/supplier')}>Nhà cung cấp</Button>
       </Box>
 
       {/* Bảng */}

@@ -18,7 +18,7 @@ const StaffPayment = () => {
     const [docs, setDocs] = useState([]);
     const [seats, setSeats] = useState([]);
     const [seatID, setSeatID] = useState('');
-
+    const [units, setUnits] = useState([]);
     const [total, setTotal] = useState(0);
 
     function mergeCarts(oldCart, newCart) {
@@ -27,7 +27,6 @@ const StaffPayment = () => {
         newCart.forEach(newItem => {
             const index = merged.findIndex(item => item.id === newItem.id);
             if (index !== -1) {
-                // Nếu món đã tồn tại, cộng dồn số lượng
                 merged[index].quantity += newItem.quantity;
             } else {
                 merged.push(newItem);
@@ -41,6 +40,10 @@ const StaffPayment = () => {
         return cart.reduce((sum, item) => sum + item.quantity * item.price, 0);
     }
 
+    const getUnitLabel = (unitId) => {
+        const found = units.find(u => u.id === unitId);
+        return found ? found.value : unitId;
+    };
 
     const navigate = useNavigate();
     const formik = useFormik({
@@ -62,9 +65,7 @@ const StaffPayment = () => {
             const now = new Date().toLocaleString();
             const note = localStorage.getItem('note') || '';
 
-
             if (dineinQuery.empty) {
-                // Chưa có hóa đơn, tạo mới
                 await projectFirestore.collection('dinein').add({
                     seatID,
                     seat: values.seat,
@@ -76,12 +77,9 @@ const StaffPayment = () => {
                     date: now
                 });
             } else {
-                // Đã có hóa đơn -> gộp giỏ hàng
                 const docRef = dineinQuery.docs[0].ref;
                 const oldData = dineinQuery.docs[0].data();
-                console.log(oldData)
                 const oldCart = oldData.cart || [];
-
                 const mergedCart = mergeCarts(oldCart, docs);
                 const newTotal = calculateTotal(mergedCart);
 
@@ -103,13 +101,11 @@ const StaffPayment = () => {
             localStorage.setItem('note', '');
             navigate('/staff/dinein');
 
-            // Xoá giỏ hàng sau khi đặt
             const cart_query = projectFirestore.collection('cart').where('uid', '==', user.uid);
             const querySnapshot = await cart_query.get();
             querySnapshot.forEach((doc) => doc.ref.delete());
         },
     });
-
 
     useEffect(() => {
         projectFirestore.collection('seat')
@@ -118,13 +114,10 @@ const StaffPayment = () => {
             .onSnapshot((snap) => {
                 let documents = [];
                 snap.forEach(doc => {
-                    documents.push({
-                        ...doc.data(),
-                        id: doc.id
-                    })
+                    documents.push({ ...doc.data(), id: doc.id })
                 });
-                setSeats(documents)
-            })
+                setSeats(documents);
+            });
 
         if (user) {
             projectFirestore.collection('cart')
@@ -132,16 +125,17 @@ const StaffPayment = () => {
                 .onSnapshot((snap) => {
                     let documents = [];
                     snap.forEach(doc => {
-                        documents.push({
-                            ...doc.data(),
-                            id: doc.id
-                        })
+                        documents.push({ ...doc.data(), id: doc.id });
                     });
-                    setDocs(documents)
-                })
+                    setDocs(documents);
+                });
+
+            projectFirestore.collection('units').get().then((snap) => {
+                const data = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                setUnits(data);
+            });
         }
     }, [setDocs, setSeats, user]);
-
 
     useEffect(() => {
         if (user) {
@@ -151,13 +145,11 @@ const StaffPayment = () => {
             });
             setTotal(data);
         }
-    })
-
+    });
 
     return (
         <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
             <Grid container spacing={4}>
-                {/* Form chọn bàn và đặt hàng */}
                 <Grid item xs={12} md={6}>
                     <Typography variant="h4" fontWeight="bold" gutterBottom sx={{ marginBottom: '10px' }}>
                         Thông tin giao hàng
@@ -211,7 +203,6 @@ const StaffPayment = () => {
                     </form>
                 </Grid>
 
-                {/* Danh sách món trong giỏ hàng */}
                 <Grid item xs={12} md={6}>
                     <Typography variant="h4" fontWeight="bold" gutterBottom>
                         Thông tin giỏ hàng
@@ -231,11 +222,7 @@ const StaffPayment = () => {
                                     alignItems: 'center',
                                 }}
                             >
-                                <Badge
-                                    badgeContent={cart.quantity}
-                                    color="error"
-                                    sx={{ mr: 2 }}
-                                >
+                                <Badge badgeContent={cart.quantity} color="error" sx={{ mr: 2 }}>
                                     <CardMedia
                                         component="img"
                                         image={cart.image}
@@ -247,7 +234,7 @@ const StaffPayment = () => {
                                 <Box flexGrow={1}>
                                     <Typography fontWeight="bold">{cart.name}</Typography>
                                     <Typography variant="body2" color="text.secondary">
-                                        {currencyFormat(cart.price)} / {cart.unit}
+                                        {currencyFormat(cart.price)} / {getUnitLabel(cart.unit)}
                                     </Typography>
                                 </Box>
 
@@ -268,7 +255,6 @@ const StaffPayment = () => {
             </Grid>
         </Container>
     );
-
 }
 
-export default StaffPayment
+export default StaffPayment;

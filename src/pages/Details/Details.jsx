@@ -12,11 +12,17 @@ import { toast } from '../../services/toast';
 const Details = () => {
   const classes = useStyles();
   const [docs, setDocs] = useState([]);
+  const [units, setUnits] = useState([]);
   const { id } = useParams();
   const [user] = useAuthState(projectAuth);
   const [cart, setCart] = useState([]);
   const check = cart.find(item => (item.menuId === id));
-  const doc = docs.find(item => (item.id === id))
+  const doc = docs.find(item => (item.id === id));
+
+  const getUnitLabel = (unitKey) => {
+    const found = units.find(u => u.id === unitKey);
+    return found ? found.value : unitKey;
+  };
 
   const handleClick = () => {
     const {
@@ -31,7 +37,7 @@ const Details = () => {
       if (check) {
         projectFirestore.collection('cart').doc(check.id).update({
           quantity: firebase.firestore.FieldValue.increment(1)
-        })
+        });
       } else {
         projectFirestore.collection('cart').add({
           uid: user.uid,
@@ -42,7 +48,7 @@ const Details = () => {
           image,
           unit,
           quantity: 1
-        })
+        });
       }
       toast({
         title: 'Thông báo',
@@ -62,45 +68,48 @@ const Details = () => {
               uid: user.uid,
               email: user.email,
               role: user.role,
-            })
+            });
           }
         })
         .catch((error) => {
           console.log(error);
-        })
+        });
     }
-  }
+  };
+
   useEffect(() => {
-    projectFirestore.collection('menu')
+    // Lấy thông tin sản phẩm
+    const unsubMenu = projectFirestore.collection('menu')
       .where('__name__', '==', id)
       .onSnapshot((snap) => {
-        let documents = [];
-        snap.forEach(doc => {
-          documents.push({
-            ...doc.data(),
-            id: doc.id
-          })
-        });
-        setDocs(documents)
-      })
+        const documents = snap.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+        setDocs(documents);
+      });
+
+    // Lấy giỏ hàng nếu có user
+    let unsubCart = () => {};
     if (user) {
-      projectFirestore.collection('cart')
-        .orderBy('name', 'desc')
+      unsubCart = projectFirestore.collection('cart')
         .where('uid', '==', user.uid)
         .onSnapshot((snap) => {
-          let documents = [];
-          snap.forEach(doc => {
-            documents.push({
-              ...doc.data(),
-              id: doc.id
-            })
-          });
-          setCart(documents)
-        })
+          const documents = snap.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+          setCart(documents);
+        });
     }
 
-  }, [setDocs, setCart, id])
+    // Lấy danh sách đơn vị từ Firestore
+    const fetchUnits = async () => {
+      const snap = await projectFirestore.collection('units').get();
+      const data = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setUnits(data);
+    };
+    fetchUnits();
 
+    return () => {
+      unsubMenu();
+      unsubCart();
+    };
+  }, [setDocs, setCart, id, user]);
 
   return (
     <Container maxWidth="lg" sx={{ py: 6 }}>
@@ -131,7 +140,7 @@ const Details = () => {
             </Typography>
             <Typography variant="h6" sx={{ mt: 1, mb: 2 }}>
               Giá: <span style={{ color: '#d32f2f', fontWeight: 'bold' }}>
-                {currencyFormat(doc.price)} đ/{doc.unit}
+                {currencyFormat(doc.price)} đ/{getUnitLabel(doc.unit)}
               </span>
             </Typography>
 
@@ -161,7 +170,6 @@ const Details = () => {
       ))}
     </Container>
   );
-
 }
 
-export default Details
+export default Details;

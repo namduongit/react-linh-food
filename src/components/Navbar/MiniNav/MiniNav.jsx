@@ -3,7 +3,7 @@ import {
     AppBar, Menu, MenuItem, Button, Toolbar, Container, Box, Link as MaterialLink
 } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
-import { items, navCategories, adminItems, staffItems } from '../../../constants';
+import { items, adminItems, staffItems } from '../../../constants';
 
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { projectAuth, projectFirestore } from '../../../firebase/config';
@@ -19,6 +19,7 @@ const MiniNav = () => {
 
     const [user] = useAuthState(projectAuth);
     const [role, setRole] = useState(null);
+    const [categories, setCategories] = useState([]);
 
     useEffect(() => {
         if (user) {
@@ -31,6 +32,14 @@ const MiniNav = () => {
             setRole(null);
         }
     }, [user]);
+
+    useEffect(() => {
+        const fetchCategories = async () => {
+            const snapshot = await projectFirestore.collection('categories').orderBy('value').get();
+            setCategories(snapshot.docs.map(doc => ({ value: doc.id, label: doc.data().value })));
+        };
+        fetchCategories();
+    }, []);
 
     const handleClick = (event) => setAnchorEl(event.currentTarget);
     const handleClose = () => setAnchorEl(null);
@@ -64,7 +73,7 @@ const MiniNav = () => {
             <Container>
                 <Toolbar disableGutters>
                     <Box className={classes.wrapper} sx={{ flexGrow: 1 }}>
-                        {/* User: Danh mục sidebar */}
+
                         {role !== 'admin' && (
                             <>
                                 <Button
@@ -93,7 +102,7 @@ const MiniNav = () => {
                                     onClose={handleClose}
                                     MenuListProps={{ 'aria-labelledby': 'basic-button' }}
                                 >
-                                    {navCategories.map((category) => (
+                                    {categories.map((category) => (
                                         <MenuItem
                                             onClick={handleClose}
                                             key={category.value}
