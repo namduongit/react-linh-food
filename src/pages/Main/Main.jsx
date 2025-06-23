@@ -5,25 +5,30 @@ import Hero from '../../components/Hero/Hero';
 import Features from '../../components/Features/Features';
 
 const Main = () => {
-  const [sections, setSections] = useState([]);
+  const [mainFeatures, setMainFeatures] = useState([]);
 
   useEffect(() => {
-    const unsubscribe = projectFirestore.collection('featuredTypes')
-      .orderBy('order')
-      .onSnapshot((snap) => {
-        const data = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        setSections(data);
-      });
-    return () => unsubscribe();
+  
+    const unsubscribeSesion = projectFirestore.collection('mainFeatures')
+    .orderBy('order')
+    .onSnapshot((snap) => {
+      const data = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setMainFeatures(data);
+    })
+
+    return () => {
+      unsubscribeSesion();
+    }
+
   }, []);
 
+
   return (
-    <Box>
+    <Box sx={{ mt: 4 }}>
       <Hero />
-      {sections.map(section => (
+      {mainFeatures.map(section => (
         <Features
           key={section.id}
-          type={section.type}
           categoryId={section.categoryId}
           title={section.title}
           img={section.image}

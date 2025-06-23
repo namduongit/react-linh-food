@@ -5,6 +5,7 @@ import {
   TableHead, TableRow, TableFooter, TablePagination, Button, Box, Grid, TextField,
   MenuItem, Typography, IconButton
 } from '@mui/material';
+import ExportTicketDialog from '../ExportDialog/ExportDialog';
 import { useStyles } from './styles';
 import { projectFirestore } from '../../../firebase/config';
 import { currencyFormat } from '../../../utils/currencyFormat'
@@ -39,6 +40,8 @@ const AdminInbound = () => {
   const [openDialog, setOpenDialog] = useState(false);
   const [inboundDetails, setInboundDetails] = useState([]);
   const [dataDetail, setDataDetail] = useState([]);
+
+  const [openExport, setOpenExport] = useState(false);
 
   const handleShowDetail = async (inboundId) => {
     const snap = await projectFirestore
@@ -176,12 +179,14 @@ const AdminInbound = () => {
         </Grid>
       </Paper>
 
-      
+
       <Box sx={{ mb: 2, textAlign: 'right' }}>
-        <Button variant="contained" onClick={() => navigate('/admin/add-inbound')} sx={{mr: 1}}>
+        <Button variant="contained" onClick={() => navigate('/admin/add-inbound')} sx={{ mr: 1 }}>
           Thêm phiếu nhập
         </Button>
-        <Button variant='contained' onClick={() => navigate('/admin/supplier')}>Nhà cung cấp</Button>
+        <Button variant='contained' onClick={() => navigate('/admin/supplier')} sx={{ mr: 1 }}>Nhà cung cấp</Button>
+        <Button variant='contained' onClick={() => setOpenExport(true)} sx={{ mr: 1 }}>Phiếu xuất/Hủy</Button>
+        <Button variant='contained' onClick={() => navigate('/admin/exports')}>Quản lý xuất</Button>
       </Box>
 
       <TableContainer component={Paper} className={classes.container}>
@@ -318,6 +323,7 @@ const AdminInbound = () => {
         </DialogActions>
       </Dialog>
 
+      <ExportTicketDialog open={openExport} onClose={() => setOpenExport(false)} />
     </Container>
   );
 };

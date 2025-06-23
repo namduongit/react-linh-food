@@ -23,6 +23,7 @@ import History from './pages/History/History';
 import CartProvider from './context/CartContext';
 import Reserve from './pages/Reserve/Reserve';
 import Results from './pages/Results/Results';
+import DiscountedMenu from './pages/Discount/Discount';
 
 // Admin Element
 import AdminMenu from './admin/pages/AdminMenu/AdminMenu';
@@ -37,6 +38,8 @@ import AdminKey from './admin/pages/AdminKey/AdminKey';
 import AdminSupplier from './admin/pages/AdminSupplier/AdminSupplier';
 import AdminSupplierStats from './admin/pages/AdminSupplierStats/AdminSupplierStats';
 import AdminMainPage from './admin/pages/AdminMainPage/AdminMainPage';
+import AdminExport from './admin/pages/AdminExport/AdminExport';
+import DiscountManager from './admin/pages/DiscountManager/DiscountManager';
 
 // Staff Element
 import Seat from './staff/pages/Seat/Seat';
@@ -160,7 +163,7 @@ function App() {
                 <Route exact path='/payment' element={<Payment />} />
                 <Route exact path='/user/reserve' element={<Reserve />} />
                 <Route exact path='/search/:keyword' element={<Results />} />
-
+                <Route exact path='/menu/discount' element={<DiscountedMenu />} />
                 {/* admin path */}
                 {
                   role === 'admin' && ( 
@@ -181,6 +184,8 @@ function App() {
                       <Route exact path='/admin/supplier' element={<AdminSupplier />} />
                       <Route exact path='/admin/supplier-stats' element={<AdminSupplierStats />} />
                       <Route exact path='/admin/main-page' element={<AdminMainPage />} />
+                      <Route exact path='/admin/exports' element={<AdminExport />}/>
+                      <Route exact path='/admin/discounts' element={<DiscountManager />} />
                     </>
                   )
                 }

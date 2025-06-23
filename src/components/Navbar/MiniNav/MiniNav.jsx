@@ -138,6 +138,24 @@ const MiniNav = () => {
                                             Liên hệ
                                         </MaterialLink>
                                     </MenuItem>
+
+                                    <MenuItem
+                                        onClick={handleClose}
+                                        key={'discount'}
+                                        className={classes.menuItem}
+                                    >
+                                        <MaterialLink
+                                            underline="none"
+                                            color="inherit"
+                                            component={RouterLink}
+                                            to={`/menu/discount`}
+                                            className={classes.links}
+                                            sx={{ display: 'flex', alignItems: 'center' }}
+                                        >
+                                            <MinimizeIcon sx={{ mr: 1 }} />
+                                            Hàng giảm giá
+                                        </MaterialLink>
+                                    </MenuItem>
                                 </Menu>
                             </>
                         )}

@@ -8,7 +8,6 @@ const Hero = () => {
 
   useEffect(() => {
     const unsub = projectFirestore.collection('mainHeroes')
-      .where('active', '==', true)
       .orderBy('order')
       .onSnapshot((snap) => {
         const docs = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -17,6 +16,7 @@ const Hero = () => {
 
     return () => unsub();
   }, []);
+  
 
   return (
     <Container maxWidth="lg">

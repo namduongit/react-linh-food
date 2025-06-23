@@ -186,6 +186,9 @@ const AdminMenu = () => {
         <Button variant="contained" onClick={() => navigate('/admin/main-page')} sx={{ mr: 1 }}>
           Quản lý trang chủ
         </Button>
+        <Button variant="contained" onClick={() => navigate('/admin/discounts')} sx={{ mr: 1 }}>
+          Quản lý sản phẩm giảm giá
+        </Button>
         {outOfStockDocs.length > 0 && (
           <Button variant="contained" onClick={() => setOpenDialog(true)} sx={{ mr: 1 }}>
             Món hết hàng

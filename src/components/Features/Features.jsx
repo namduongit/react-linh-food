@@ -10,6 +10,7 @@ const Features = ({ categoryId, img, title }) => {
   const [docs, setDocs] = useState([]);
 
   useEffect(() => {
+
     const unsubscribe = projectFirestore.collection('menu')
       .where('category', '==', categoryId)
       .where('availible', '==', true)

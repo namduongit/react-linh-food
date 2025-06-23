@@ -100,13 +100,13 @@ const Payment = () => {
 
     useEffect(() => {
         if (user) {
-            let data = 0;
-            docs.forEach(doc => {
-                data += doc.quantity * parseInt(doc.price);
-            });
-            setTotal(data);
+            const totalCost = docs.reduce((sum, item) => {
+                return sum + item.quantity * item.price;
+            }, 0);
+            setTotal(totalCost);
         }
-    });
+    }, [docs, user]);
+
 
     useEffect(() => {
         const fetchDistricts = async () => {
@@ -147,44 +147,212 @@ const Payment = () => {
 
     return (
         <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-            {/* ... giữ nguyên nội dung form */}
-
-            <Grid item xs={12} md={5}>
-                <Typography variant="h4" fontWeight="bold" gutterBottom>
-                    Thông tin giỏ hàng
-                </Typography>
-
-                {docs.length === 0 ? (
-                    <Typography>Chưa có sản phẩm nào trong giỏ.</Typography>
-                ) : (
-                    docs.map((cart) => (
-                        <Card key={cart.id} sx={{ display: 'flex', mb: 2, p: 1.5 }}>
-                            <Badge badgeContent={cart.quantity} color="error" sx={{ mr: 2 }}>
-                                <CardMedia
-                                    component="img"
-                                    image={cart.image}
-                                    sx={{ width: 80, height: 80, borderRadius: 1 }}
-                                />
-                            </Badge>
-                            <Box flexGrow={1}>
-                                <Typography fontWeight="bold">{cart.name}</Typography>
-                                <Typography variant="body2" color="text.secondary">
-                                    {currencyFormat(cart.price)} / {getUnitLabel(cart.unit)}
-                                </Typography>
-                                <Typography fontWeight="bold" sx={{ mt: 1 }} color="primary">
-                                    Tạm tính: {currencyFormat(cart.price * cart.quantity)} đ
-                                </Typography>
-                            </Box>
-                        </Card>
-                    ))
-                )}
-
-                <Box sx={{ mt: 3, display: 'flex', justifyContent: 'space-between' }}>
-                    <Typography variant="h5">Tổng tiền:</Typography>
-                    <Typography variant="h5" fontWeight="bold" color="error">
-                        {currencyFormat(total)} đ
+            <Grid container spacing={4}>
+                <Grid item xs={12} md={7}>
+                    <Typography variant="h4" fontWeight="bold" gutterBottom>
+                        Thông tin giao hàng
                     </Typography>
-                </Box>
+                    <form onSubmit={formik.handleSubmit}>
+                        <TextField
+                            fullWidth
+                            label="Họ và tên"
+                            id="name"
+                            name="name"
+                            value={formik.values.name}
+                            onChange={formik.handleChange}
+                            error={formik.touched.name && Boolean(formik.errors.name)}
+                            helperText={formik.touched.name && formik.errors.name}
+                            sx={{ mb: 2 }}
+                        />
+                        <TextField
+                            fullWidth
+                            label="Số điện thoại"
+                            id="phone"
+                            name="phone"
+                            value={formik.values.phone}
+                            onChange={formik.handleChange}
+                            error={formik.touched.phone && Boolean(formik.errors.phone)}
+                            helperText={formik.touched.phone && formik.errors.phone}
+                            sx={{ mb: 2 }}
+                        />
+                        <TextField
+                            fullWidth
+                            label="Địa chỉ"
+                            id="address"
+                            name="address"
+                            value={formik.values.address}
+                            onChange={formik.handleChange}
+                            error={formik.touched.address && Boolean(formik.errors.address)}
+                            helperText={formik.touched.address && formik.errors.address}
+                            sx={{ mb: 2 }}
+                        />
+
+                        <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+                            <FormControl fullWidth>
+                                <InputLabel>Thành phố</InputLabel>
+                                <Select
+                                    name="province"
+                                    value={formik.values.province}
+                                    onChange={(e) => {
+                                        formik.setFieldValue('district', 0);
+                                        formik.setFieldValue('ward', 0);
+                                        formik.handleChange(e);
+                                    }}
+                                    error={formik.touched.province && Boolean(formik.errors.province)}
+                                >
+                                    <MenuItem value={0} disabled hidden>Chưa chọn</MenuItem>
+                                    {provinces.map(province => (
+                                        <MenuItem key={province.code} value={province.code}>
+                                            {province.name}
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                                {formik.touched.province && formik.errors.province && (
+                                    <FormHelperText sx={{ color: 'error.main' }}>
+                                        {formik.errors.province}
+                                    </FormHelperText>
+                                )}
+                            </FormControl>
+
+                            <FormControl fullWidth>
+                                <InputLabel>Quận/Huyện</InputLabel>
+                                <Select
+                                    name="district"
+                                    value={formik.values.district}
+                                    onChange={(e) => {
+                                        formik.setFieldValue('ward', 0);
+                                        formik.handleChange(e);
+                                    }}
+                                    error={formik.touched.district && Boolean(formik.errors.district)}
+                                >
+                                    <MenuItem value={0} disabled hidden>Chưa chọn</MenuItem>
+                                    {districts.map(district => (
+                                        <MenuItem key={district.code} value={district.code}>
+                                            {district.name}
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                                {formik.touched.district && formik.errors.district && (
+                                    <FormHelperText sx={{ color: 'error.main' }}>
+                                        {formik.errors.district}
+                                    </FormHelperText>
+                                )}
+                            </FormControl>
+
+                            <FormControl fullWidth>
+                                <InputLabel>Phường/Xã</InputLabel>
+                                <Select
+                                    name="ward"
+                                    value={formik.values.ward}
+                                    onChange={formik.handleChange}
+                                    error={formik.touched.ward && Boolean(formik.errors.ward)}
+                                >
+                                    <MenuItem value={0} disabled hidden>Chưa chọn</MenuItem>
+                                    {wards.map(ward => (
+                                        <MenuItem key={ward.code} value={ward.code}>
+                                            {ward.name}
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                                {formik.touched.ward && formik.errors.ward && (
+                                    <FormHelperText sx={{ color: 'error.main' }}>
+                                        {formik.errors.ward}
+                                    </FormHelperText>
+                                )}
+                            </FormControl>
+                        </Box>
+
+                        <Typography variant="h5" sx={{ mt: 3 }}>Phương thức thanh toán</Typography>
+                        <Card sx={{ mt: 2 }}>
+                            <CardContent>
+                                <FormControl>
+                                    <RadioGroup
+                                        name="payment"
+                                        value={formik.values.payment}
+                                        onChange={formik.handleChange}
+                                    >
+                                        <FormControlLabel
+                                            value="cod"
+                                            control={<Radio />}
+                                            label="Thanh toán khi nhận hàng (COD)"
+                                        />
+                                        <FormControlLabel
+                                            value="transfer"
+                                            control={<Radio />}
+                                            label="Chuyển khoản ngân hàng"
+                                        />
+                                    </RadioGroup>
+                                </FormControl>
+                            </CardContent>
+                            <CardActions sx={{ justifyContent: 'space-between', px: 2 }}>
+                                <Button component={RouterLink} to="/cart" variant="text">
+                                    Quay lại giỏ hàng
+                                </Button>
+                                <Button variant="contained" color="warning" type="submit">
+                                    Đặt mua
+                                </Button>
+                            </CardActions>
+                        </Card>
+                    </form>
+                </Grid>
+
+                <Grid item xs={12} md={5}>
+                    <Typography variant="h4" fontWeight="bold" gutterBottom>
+                        Thông tin giỏ hàng
+                    </Typography>
+
+                    {docs.length === 0 ? (
+                        <Typography>Chưa có sản phẩm nào trong giỏ.</Typography>
+                    ) : (
+                        docs.map((cart) => (
+                            <Card key={cart.id} sx={{ display: 'flex', mb: 2, p: 1.5 }}>
+                                <Badge badgeContent={cart.quantity} color="error" sx={{ mr: 2 }}>
+                                    <CardMedia
+                                        component="img"
+                                        image={cart.image}
+                                        sx={{ width: 80, height: 80, borderRadius: 1 }}
+                                    />
+                                </Badge>
+                                <Box flexGrow={1}>
+                                    <Typography fontWeight="bold">
+                                        {cart.name}
+                                        {cart.isDiscount && (
+                                            <Typography component="span" variant="caption" color="error" sx={{ ml: 1 }}>
+                                                (Giảm {cart.discount}%)
+                                            </Typography>
+                                        )}
+                                    </Typography>
+
+                                    {cart.isDiscount ? (
+                                        <Box>
+                                            <Typography variant="body2" color="text.secondary" sx={{ textDecoration: 'line-through' }}>
+                                                {currencyFormat((cart.price * 100) / (100 - cart.discount))} đ / {getUnitLabel(cart.unit)}
+                                            </Typography>
+                                            <Typography variant="body2" color="primary">
+                                                {currencyFormat(cart.price)} đ / {getUnitLabel(cart.unit)}
+                                            </Typography>
+                                        </Box>
+                                    ) : (
+                                        <Typography variant="body2" color="text.secondary">
+                                            {currencyFormat(cart.price)} đ / {getUnitLabel(cart.unit)}
+                                        </Typography>
+                                    )}
+
+                                    <Typography fontWeight="bold" sx={{ mt: 1 }} color="primary">
+                                        Tạm tính: {currencyFormat(cart.price * cart.quantity)} đ
+                                    </Typography>
+                                </Box>
+                            </Card>
+                        ))
+                    )}
+
+                    <Box sx={{ mt: 3, display: 'flex', justifyContent: 'space-between' }}>
+                        <Typography variant="h5">Tổng tiền:</Typography>
+                        <Typography variant="h5" fontWeight="bold" color="error">
+                            {currencyFormat(total)} đ
+                        </Typography>
+                    </Box>
+                </Grid>
             </Grid>
         </Container>
     );

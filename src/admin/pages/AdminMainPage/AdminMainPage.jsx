@@ -10,6 +10,8 @@ import { toast } from '../../../services/toast';
 import { showNotification } from '../../../services/showNotification';
 import { v4 as uuidv4 } from 'uuid';
 
+// ...giữ nguyên phần import
+
 const AdminMainPage = () => {
   const [tab, setTab] = useState('feature');
   const [items, setItems] = useState([]);
@@ -24,7 +26,6 @@ const AdminMainPage = () => {
     image: null,
     order: 0,
     categoryId: '',
-    active: true,
   });
 
   const collection = tab === 'feature' ? 'mainFeatures' : 'mainHeroes';
@@ -58,25 +59,28 @@ const AdminMainPage = () => {
 
   const handleSubmit = async () => {
     const { title, image, order, categoryId } = form;
-    if (!title || !image || (tab === 'feature' && !categoryId)) {
-      return toast({ title: 'Thiếu thông tin', type: 'error' });
+    if (!image || !categoryId || (tab === 'feature' && !title)) {
+      return toast({ title: 'Thông báo', message: 'Thiếu thông tin', type: 'warning' });
     }
     setUploading(true);
     try {
       const imageUrl = typeof image === 'string' ? image : await handleImageUpload(image);
-      const data = { title, image: imageUrl, order: Number(order), active: true, categoryId };
+      const data = tab === 'feature'
+        ? { title, image: imageUrl, order: Number(order), categoryId }
+        : { image: imageUrl, order: Number(order), categoryId };
+
       if (selectedId) {
         await projectFirestore.collection(collection).doc(selectedId).update(data);
-        toast({ title: 'Cập nhật thành công', type: 'success' });
+        toast({ title: 'Thông báo', message: 'Cập nhật thành công', type: 'success' });
       } else {
         await projectFirestore.collection(collection).add(data);
-        toast({ title: 'Thêm mới thành công', type: 'success' });
+        toast({ title: 'Thông báo', message: 'Thêm mới thành công', type: 'success' });
       }
       setDialogOpen(false);
       setSelectedId(null);
-      setForm({ title: '', image: null, order: 0, categoryId: '', active: true });
+      setForm({ title: '', image: null, order: 0, categoryId: '' });
     } catch (err) {
-      toast({ title: 'Lỗi', message: err.message, type: 'error' });
+      toast({ title: 'Lỗi', message: err.message, type: 'warning' });
     } finally {
       setUploading(false);
     }
@@ -87,7 +91,7 @@ const AdminMainPage = () => {
     const confirm = await showNotification('Bạn có chắc muốn xóa phần này không?');
     if (!confirm) return;
     await projectFirestore.collection(collection).doc(selectedId).delete();
-    toast({ title: 'Đã xóa', type: 'success' });
+    toast({ title: 'Thông báo', message: 'Đã xóa thành công', type: 'success' });
     setSelectedId(null);
   };
 
@@ -105,14 +109,15 @@ const AdminMainPage = () => {
       <Tabs value={tab} onChange={(e, val) => {
         setTab(val);
         setSelectedId(null);
-        setForm({ title: '', image: null, order: 0, categoryId: '', active: true });
+        setForm({ title: '', image: null, order: 0, categoryId: '' });
       }}>
         <Tab value="feature" label="Một số loại nổi bật" />
-        <Tab value="hero" label="Banner Hero" />
+        <Tab value="hero" label="Ảnh giới thiệu" />
       </Tabs>
 
-      {tab === 'feature' && (
-        <Box sx={{ mt: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
+
+      <Box sx={{ mt: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
+        {tab === 'feature' && (
           <TextField
             select
             size="small"
@@ -126,10 +131,8 @@ const AdminMainPage = () => {
               <MenuItem key={cat.id} value={cat.id}>{cat.value}</MenuItem>
             ))}
           </TextField>
-        </Box>
-      )}
+        )}
 
-      <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
         <Button variant="contained" disabled={!selectedId} onClick={handleEdit}>Sửa</Button>
         <Button variant="contained" color="error" disabled={!selectedId} onClick={handleDelete}>Xóa</Button>
         <Button variant="contained" onClick={() => setDialogOpen(true)}>Thêm mới</Button>
@@ -146,12 +149,12 @@ const AdminMainPage = () => {
               }}
             >
               <CardContent>
-                <Typography fontWeight="bold">{item.title}</Typography>
                 {tab === 'feature' && (
-                  <Typography fontSize={14}>Danh mục: {categories.find(c => c.id === item.categoryId)?.value || '---'}</Typography>
+                  <Typography fontWeight="bold">{item.title}</Typography>
                 )}
+                <Typography fontSize={14}>Danh mục: {categories.find(c => c.id === item.categoryId)?.value || '---'}</Typography>
                 <Typography fontSize={14}>Thứ tự: {item.order}</Typography>
-                <Box mt={1}><img src={item.image} alt={item.title} width="100%" style={{ borderRadius: 8 }} /></Box>
+                <Box mt={1}><img src={item.image} alt="preview" width="100%" style={{ borderRadius: 8 }} /></Box>
               </CardContent>
             </Card>
           </Grid>
@@ -162,18 +165,18 @@ const AdminMainPage = () => {
         <DialogTitle>{selectedId ? 'Cập nhật' : 'Thêm mới'} {tab === 'hero' ? 'Banner Hero' : 'Loại nổi bật'}</DialogTitle>
         <DialogContent dividers>
           <Grid container spacing={2}>
-            <Grid item xs={12}>
-              <TextField fullWidth label="Tiêu đề" value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))} />
-            </Grid>
             {tab === 'feature' && (
               <Grid item xs={12}>
-                <TextField select fullWidth label="Danh mục" value={form.categoryId} onChange={e => setForm(p => ({ ...p, categoryId: e.target.value }))}>
-                  {categories.map(cat => (
-                    <MenuItem key={cat.id} value={cat.id}>{cat.value}</MenuItem>
-                  ))}
-                </TextField>
+                <TextField fullWidth label="Tiêu đề" value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))} />
               </Grid>
             )}
+            <Grid item xs={12}>
+              <TextField select fullWidth label="Danh mục" value={form.categoryId} onChange={e => setForm(p => ({ ...p, categoryId: e.target.value }))}>
+                {categories.map(cat => (
+                  <MenuItem key={cat.id} value={cat.id}>{cat.value}</MenuItem>
+                ))}
+              </TextField>
+            </Grid>
             <Grid item xs={12}>
               <TextField fullWidth label="Thứ tự hiển thị" type="number" value={form.order} onChange={e => setForm(p => ({ ...p, order: e.target.value }))} />
             </Grid>

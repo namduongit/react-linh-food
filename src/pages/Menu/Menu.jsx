@@ -87,7 +87,7 @@ const Menu = () => {
     <>
       <Button
         className={classes.filter}
-        sx={{ m: '0 20px 30px' }}
+        sx={{ m: '0 20px 30px 0px' }}
         variant="outlined"
         onClick={handleType}
         value="all"

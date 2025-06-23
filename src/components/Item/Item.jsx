@@ -24,13 +24,19 @@ const Item = ({ doc }) => {
     price,
     subtitle,
     image,
-    unit
+    unit,
+
+    quantity,
+    reason,
+    discount
   } = doc;
   const classes = useStyles();
   const [user] = useAuthState(projectAuth);
   const [users, setUsers] = useState([]);
   const [cart, setCart] = useState([]);
   const [units, setUnits] = useState([]);
+
+
 
   useEffect(() => {
     const unsubscribeUsers = projectFirestore.collection('users')
@@ -40,7 +46,7 @@ const Item = ({ doc }) => {
         setUsers(documents);
       });
 
-    let unsubscribeCart = () => {};
+    let unsubscribeCart = () => { };
     if (user) {
       unsubscribeCart = projectFirestore.collection('cart')
         .where('uid', '==', user.uid)
@@ -69,14 +75,16 @@ const Item = ({ doc }) => {
   };
 
   const handleClick = () => {
+    const isDiscounted = !!discount;
     const check = cart.find(item => item.menuId === id);
+
     if (user) {
       if (check) {
         projectFirestore.collection('cart').doc(check.id).update({
           quantity: firebase.firestore.FieldValue.increment(1)
         });
       } else {
-        projectFirestore.collection('cart').add({
+        const cartItem = {
           uid: user.uid,
           name,
           menuId: id,
@@ -85,8 +93,16 @@ const Item = ({ doc }) => {
           image,
           unit,
           quantity: 1
-        });
+        };
+
+        if (isDiscounted) {
+          cartItem.discount = discount;
+          cartItem.isDiscount = true;
+        }
+
+        projectFirestore.collection('cart').add(cartItem);
       }
+
       toast({
         title: 'Thông báo',
         message: 'Thêm sản phẩm vào giỏ thành công',
@@ -148,14 +164,39 @@ const Item = ({ doc }) => {
           <Typography
             variant="subtitle1"
             fontWeight="bold"
-            sx={{ mb: 1 }}
             className={classes.name}
           >
             {name}
           </Typography>
-          <Typography variant="body2" color="text.secondary">
-            {currencyFormat(price)} đ / {getUnitLabel(unit)}
+            <br></br>
+          <Typography
+            variant="subtitle1"
+            fontWeight="bold"
+            sx={{ mb: 1 }}
+            className={classes.name}
+          >
+            Còn lại: {quantity}
           </Typography>
+
+          {discount ? (
+            <>
+              <Typography variant="body2" color="text.secondary">
+                <s>{currencyFormat(Math.round(price / (1 - discount / 100)))} đ</s>
+                &nbsp;
+                <span style={{ color: '#d32f2f', fontWeight: 'bold' }}>
+                  {currencyFormat(price)} đ
+                </span>
+                &nbsp;/ {getUnitLabel(unit)}
+              </Typography>
+              <Typography variant="caption" color="primary" fontWeight="bold">
+                -{discount}% GIẢM GIÁ
+              </Typography>
+            </>
+          ) : (
+            <Typography variant="body2" color="text.secondary">
+              {currencyFormat(price)} đ / {getUnitLabel(unit)}
+            </Typography>
+          )}
         </CardContent>
 
         <CardActions sx={{ justifyContent: 'center', pb: 2 }}>

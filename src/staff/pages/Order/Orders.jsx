@@ -62,24 +62,56 @@ const StaffOrder = () => {
 
         if (newStatus === 'Đã hoàn thành') {
             const batch = projectFirestore.batch();
+            let canUpdate = true;
+            const insufficientItems = [];
+
             for (const item of order.cart) {
-                const menuRef = projectFirestore.collection('menu').doc(item.menuId);
-                const menuSnap = await menuRef.get();
-                if (menuSnap.exists) {
-                    const currentQuantity = menuSnap.data().quantity || 0;
-                    batch.update(menuRef, { quantity: Math.max(currentQuantity - item.quantity, 0) });
+                const refType = item.isDiscount ? 'discounts' : 'menu';
+                console.log(refType)
+
+
+                const itemRef = projectFirestore.collection(refType).doc(item.menuId);
+                const snap = await itemRef.get();
+
+                if (!snap.exists) continue;
+
+                const data = snap.data();
+                const currentQuantity = data.quantity || 0;
+
+                console.log(`Số lượng còn lại trong kho`)
+                if (currentQuantity < item.quantity) {
+                    canUpdate = false;
+                    insufficientItems.push(data.name || data.subtitle || 'Không rõ tên');
+                    continue;
                 }
+                batch.update(itemRef, { quantity: currentQuantity - item.quantity });
             }
+
+            if (!canUpdate) {
+                toast({
+                    title: 'Thông báo',
+                    message: `Không đủ hàng cho các món: ${insufficientItems.join(', ')}`,
+                    type: 'warning',
+                    duration: 3000
+                });
+                return;
+            }
+            return;
             await batch.commit();
         }
-
+        return;
         await projectFirestore.collection('order').doc(id).update({
             checked: newStatus === 'Đã hoàn thành' || newStatus === 'Đã hủy',
             status: newStatus
         });
 
-        toast({ title: 'Thông báo', message: 'Cập nhật trạng thái đơn hàng thành công', type: 'success' });
+        toast({
+            title: 'Thông báo',
+            message: 'Cập nhật trạng thái đơn hàng thành công',
+            type: 'success'
+        });
     };
+
 
     useEffect(() => {
         const unsub = projectFirestore.collection('order')
@@ -123,7 +155,7 @@ const StaffOrder = () => {
                         <MenuItem value="">Tất cả</MenuItem>
                         {statusArray.map((status, i) => <MenuItem key={i} value={status}>{status}</MenuItem>)}
                     </TextField>
-                    <TextField select label="Sắp xếp theo tiền" value={sortOrder} onChange={e => setSortOrder(e.target.value)} sx={{width: '200px'}}>
+                    <TextField select label="Sắp xếp theo tiền" value={sortOrder} onChange={e => setSortOrder(e.target.value)} sx={{ width: '200px' }}>
                         <MenuItem value="">Mặc định</MenuItem>
                         <MenuItem value="asc">Tăng dần</MenuItem>
                         <MenuItem value="desc">Giảm dần</MenuItem>
