@@ -60,15 +60,13 @@ const StaffOrder = () => {
         const order = docs.find((doc) => doc.id === id);
         if (!order) return;
 
-        if (newStatus === 'Đã hoàn thành') {
+        if (newStatus !== 'Đã hủy') {
             const batch = projectFirestore.batch();
             let canUpdate = true;
             const insufficientItems = [];
 
             for (const item of order.cart) {
                 const refType = item.isDiscount ? 'discounts' : 'menu';
-                console.log(refType)
-
 
                 const itemRef = projectFirestore.collection(refType).doc(item.menuId);
                 const snap = await itemRef.get();
@@ -78,7 +76,6 @@ const StaffOrder = () => {
                 const data = snap.data();
                 const currentQuantity = data.quantity || 0;
 
-                console.log(`Số lượng còn lại trong kho`)
                 if (currentQuantity < item.quantity) {
                     canUpdate = false;
                     insufficientItems.push(data.name || data.subtitle || 'Không rõ tên');
@@ -96,10 +93,8 @@ const StaffOrder = () => {
                 });
                 return;
             }
-            return;
-            await batch.commit();
+            if (newStatus === 'Đã hoàn thành') await batch.commit();
         }
-        return;
         await projectFirestore.collection('order').doc(id).update({
             checked: newStatus === 'Đã hoàn thành' || newStatus === 'Đã hủy',
             status: newStatus

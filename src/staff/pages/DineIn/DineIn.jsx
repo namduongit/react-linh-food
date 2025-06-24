@@ -61,33 +61,58 @@ const DineInOrdersFiltered = () => {
         const newStatus = event.target.value;
         const confirm = await showNotification('Thay đổi trạng thái đơn hàng ?');
         if (!confirm) return;
+
         const order = docs.find(doc => doc.id === id);
         if (!order) return;
+
         if (newStatus === 'Đã hoàn thành') {
             const batch = projectFirestore.batch();
+            let canUpdate = true;
+            const insufficientItems = [];
+
             for (const item of order.cart) {
-                const menuRef = projectFirestore.collection('menu').doc(item.menuId);
-                const menuSnap = await menuRef.get();
-                if (menuSnap.exists) {
-                    const currentQuantity = menuSnap.data().quantity || 0;
-                    const updatedQuantity = currentQuantity - item.quantity;
-                    batch.update(menuRef, { quantity: updatedQuantity < 0 ? 0 : updatedQuantity });
+                const menuRef = projectFirestore.collection(item.isDiscount ? 'discounts' : 'menu').doc(item.menuId);
+                const snap = await menuRef.get();
+                if (!snap.exists) continue;
+
+                const data = snap.data();
+                const currentQuantity = data.quantity || 0;
+
+                if (currentQuantity < item.quantity) {
+                    canUpdate = false;
+                    insufficientItems.push(data.name || data.subtitle || 'Không rõ tên');
+                    continue;
                 }
+                batch.update(menuRef, { quantity: currentQuantity - item.quantity });
             }
+            if (!canUpdate) {
+                toast({
+                    title: 'Thông báo',
+                    message: `Không đủ hàng cho các món: ${insufficientItems.join(', ')}`,
+                    type: 'warning'
+                });
+                return;
+            }
+
             await batch.commit();
-        }
-        await projectFirestore.collection('dinein').doc(id).update({
-            checked: newStatus === 'Đã hoàn thành',
-            status: newStatus
-        });
-        if (newStatus === 'Đã hoàn thành') {
             await updateDoc(doc(projectFirestore, 'seat', seatID), {
                 total: 0,
                 status: 'Trống'
             });
         }
-        toast({ title: 'Thành công', message: 'Cập nhật trạng thái đơn hàng', type: 'success' });
+
+        await projectFirestore.collection('dinein').doc(id).update({
+            checked: newStatus === 'Đã hoàn thành',
+            status: newStatus
+        });
+
+        toast({
+            title: 'Thành công',
+            message: 'Cập nhật trạng thái đơn hàng',
+            type: 'success'
+        });
     };
+
 
     const handleDelete = async (id, seatID, status) => {
         if (status === 'Đã hoàn thành') return;
@@ -111,11 +136,11 @@ const DineInOrdersFiltered = () => {
                 <Box display="flex" gap={2} flexWrap="wrap">
                     <TextField label="Từ ngày" type="date" value={fromDate} InputLabelProps={{ shrink: true }} onChange={e => setFromDate(e.target.value)} />
                     <TextField label="Đến ngày" type="date" value={toDate} InputLabelProps={{ shrink: true }} onChange={e => setToDate(e.target.value)} />
-                    <TextField label="Trạng thái" select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} sx={{width: '200px'}}>
+                    <TextField label="Trạng thái" select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} sx={{ width: '200px' }}>
                         <MenuItem value=''>Tất cả</MenuItem>
                         {statusArray.map((status, i) => <MenuItem key={i} value={status}>{status}</MenuItem>)}
                     </TextField>
-                    <TextField label="Sắp xếp theo tổng tiền" select value={sortOrder} onChange={e => setSortOrder(e.target.value)} sx={{width: '200px'}}>
+                    <TextField label="Sắp xếp theo tổng tiền" select value={sortOrder} onChange={e => setSortOrder(e.target.value)} sx={{ width: '200px' }}>
                         <MenuItem value=''>Mặc định</MenuItem>
                         <MenuItem value='asc'>Tăng dần</MenuItem>
                         <MenuItem value='desc'>Giảm dần</MenuItem>
