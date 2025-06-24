@@ -65,7 +65,7 @@ const DineInOrdersFiltered = () => {
         const order = docs.find(doc => doc.id === id);
         if (!order) return;
 
-        if (newStatus === 'Đã hoàn thành') {
+        if (newStatus !== 'Đã hủy') {
             const batch = projectFirestore.batch();
             let canUpdate = true;
             const insufficientItems = [];
@@ -94,11 +94,13 @@ const DineInOrdersFiltered = () => {
                 return;
             }
 
-            await batch.commit();
-            await updateDoc(doc(projectFirestore, 'seat', seatID), {
-                total: 0,
-                status: 'Trống'
-            });
+            if (newStatus == 'Đã hoàn thành') {
+                await batch.commit();
+                await updateDoc(doc(projectFirestore, 'seat', seatID), {
+                    total: 0,
+                    status: 'Trống'
+                });
+            }
         }
 
         await projectFirestore.collection('dinein').doc(id).update({

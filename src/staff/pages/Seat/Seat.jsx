@@ -12,7 +12,9 @@ import { projectFirestore } from '../../../firebase/config';
 import { currencyFormat } from '../../../utils/currencyFormat';
 import { QRCodeCanvas } from 'qrcode.react';
 
-import dayjs from 'dayjs';
+import { useRef } from 'react';
+
+
 
 
 const Seat = () => {
@@ -38,6 +40,50 @@ const Seat = () => {
     const [openDetailSeat, setOpenDetailSeat] = useState(false);
     const [seatDatas, setSeatData] = useState([]);
     const [findSeatData, setFindSeatData] = useState([]);
+
+    const printRef = useRef(); 
+    const handlePrint = () => {
+        if (!printRef.current) return;
+
+        const printContents = printRef.current.innerHTML;
+        const printWindow = window.open('', '', 'width=800,height=600');
+        printWindow.document.write(`
+        <html>
+        <head>
+            <title>Hóa đơn</title>
+            <style>
+                body {
+                    font-family: Arial, sans-serif;
+                    padding: 20px;
+                }
+                h2 {
+                    text-align: center;
+                    margin-bottom: 20px;
+                }
+                ul {
+                    padding-left: 20px;
+                }
+                li {
+                    margin-bottom: 8px;
+                }
+                .total {
+                    font-size: 18px;
+                    font-weight: bold;
+                    margin-top: 20px;
+                }
+            </style>
+        </head>
+        <body>
+            <h2>HÓA ĐƠN THANH TOÁN</h2>
+            ${printContents}
+        </body>
+        </html>
+    `);
+        printWindow.document.close();
+        printWindow.focus();
+        printWindow.print();
+        printWindow.close();
+    };
 
     const handleEditSeat = (seat) => {
         setSelectedSeat(seat);
@@ -345,12 +391,12 @@ const Seat = () => {
                 </DialogActions>
             </Dialog>
 
-            {/* Dialog ấn vào xong hiển thị chi hóa đơn bàn đó */}
+
             <Dialog open={openDetailSeat} onClose={() => setOpenDetailSeat(false)} maxWidth="sm" fullWidth>
                 <DialogTitle fontWeight="bold" fontSize={20}>
                     Thông tin hóa đơn của bàn {selectedSeat?.name}
                 </DialogTitle>
-                <DialogContent dividers>
+                <DialogContent dividers ref={printRef}>
                     <Box mb={2}>
                         <Typography variant="subtitle1" fontWeight="bold">Tổng tiền:</Typography>
                         <Typography variant="h5" color="primary" fontWeight="bold">
@@ -380,7 +426,8 @@ const Seat = () => {
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={() => setOpenDetailSeat(false)} color="secondary">Đóng</Button>
-                    <Button variant="contained" color="primary">In hóa đơn</Button>
+                    <Button variant="contained" color="primary" onClick={handlePrint}>In hóa đơn</Button>
+
                 </DialogActions>
             </Dialog>
 
