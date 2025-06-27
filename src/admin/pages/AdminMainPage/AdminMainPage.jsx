@@ -145,6 +145,7 @@ const AdminMainPage = () => {
               sx={{
                 border: selectedId === item.id ? '2px solid #1976d2' : '1px solid #ddd',
                 cursor: 'pointer',
+                height: '100%'
               }}
             >
               <CardContent>

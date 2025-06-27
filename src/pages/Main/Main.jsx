@@ -22,6 +22,8 @@ const Main = () => {
 
   }, []);
 
+  console.log(mainFeatures)
+
 
   return (
     <Box sx={{ mt: 4 }}>

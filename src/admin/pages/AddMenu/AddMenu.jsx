@@ -57,6 +57,7 @@ const AddMenu = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!fileURL) return;
     setLoading(true);
     await projectFirestore.collection('menu').add({
       name,
@@ -102,7 +103,7 @@ const AddMenu = () => {
         <form onSubmit={handleSubmit}>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
             <FormControl fullWidth required>
-              <Input type="file" onChange={handleUpload} />
+              <Input type="file" onChange={handleUpload} required/>
             </FormControl>
 
             <TextField
