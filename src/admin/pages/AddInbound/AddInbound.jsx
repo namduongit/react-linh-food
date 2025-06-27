@@ -209,7 +209,7 @@ const AddInbound = () => {
           <Grid container spacing={2}>
             {filteredMenu.map(item => (
               <Grid item xs={6} sm={3} key={item.id}>
-                <Card onClick={() => handleAddItem(item)} sx={{ cursor: 'pointer', textAlign: 'center' }}>
+                <Card onClick={() => handleAddItem(item)} sx={{ cursor: 'pointer', textAlign: 'center', height: '100%' }}>
                   <img src={item.image} alt={item.name} style={{ width: '100%', height: 100, objectFit: 'cover' }} />
                   <CardContent>
                     <Typography fontWeight="500">{item.name}</Typography>

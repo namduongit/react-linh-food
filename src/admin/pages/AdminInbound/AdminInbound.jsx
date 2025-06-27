@@ -89,17 +89,47 @@ const AdminInbound = () => {
 
       const updatePromises = [];
 
-      detailSnapshot.forEach((docSnap) => {
-        const data = docSnap.data();
-        const menuRef = projectFirestore.collection('menu').doc(data.menuId);
-        updatePromises.push(
-          menuRef.update({
-            quantity: increment(data.quantity)
-          })
-        );
-      });
+      for (const docSnap of detailSnapshot.docs) {
+        const detailData = docSnap.data();
+        const menuRef = projectFirestore.collection('menu').doc(detailData.menuId);
+        const menuSnap = await menuRef.get();
+        const menuData = menuSnap.data();
+
+        const currentPrice = menuData.price || 0;
+        const profitPercentage = menuData.profitPercentage || 0;
+        const importPrice = detailData.price;
+
+        if (currentPrice < importPrice) {
+          const confirm = await showNotification(
+            `Món "${menuData.name}" có giá bán hiện tại (${currencyFormat(currentPrice)}) thấp hơn giá nhập (${currencyFormat(importPrice)}).\n\nBạn có muốn cập nhật lại giá bán không?`
+          );
+          if (confirm) {
+            const newPrice = Math.ceil(importPrice * (1 + profitPercentage / 100));
+            updatePromises.push(
+              menuRef.update({
+                price: newPrice,
+                quantity: increment(detailData.quantity)
+              })
+            );
+          } else {
+            updatePromises.push(
+              menuRef.update({
+                quantity: increment(detailData.quantity)
+              })
+            );
+          }
+        } else {
+          updatePromises.push(
+            menuRef.update({
+              quantity: increment(detailData.quantity)
+            })
+          );
+        }
+      }
+
       await Promise.all(updatePromises);
     }
+
 
     toast({
       title: 'Thông báo',

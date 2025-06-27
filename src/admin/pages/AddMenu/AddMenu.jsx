@@ -17,6 +17,8 @@ const AddMenu = () => {
   const [unit, setUnit] = useState('');
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState(0);
+  const [profitPercentage, setProfitPercentage] = useState(0);
+
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -64,9 +66,10 @@ const AddMenu = () => {
       type,
       unit,
       price,
+      profitPercentage,
       image: fileURL,
       quantity: 0,
-      availible: false 
+      availible: false
     });
     toast({ title: 'Thành công', message: 'Đã thêm món ăn!', type: 'success', duration: 3000 });
     navigate('/admin/menu');
@@ -179,6 +182,16 @@ const AddMenu = () => {
               type="number"
               value={price}
               onChange={(e) => setPrice(parseInt(Number(e.target.value)))}
+              fullWidth
+              inputProps={{ min: 0 }}
+              required
+            />
+
+            <TextField
+              label="Phần trăm lợi nhuận (%)"
+              type="number"
+              value={profitPercentage}
+              onChange={(e) => setProfitPercentage(parseFloat(e.target.value))}
               fullWidth
               inputProps={{ min: 0 }}
               required

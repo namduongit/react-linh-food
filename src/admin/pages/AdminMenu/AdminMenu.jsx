@@ -208,6 +208,7 @@ const AdminMenu = () => {
               <TableCell align="center">Ghi chú</TableCell>
               <TableCell align="center">Mô tả</TableCell>
               <TableCell align="center">Giá</TableCell>
+              <TableCell align="center">Lợi nhuận</TableCell>
               <TableCell align="center">Danh mục</TableCell>
               <TableCell align="center">Còn lại</TableCell>
               <TableCell align="center">Đơn vị</TableCell>
@@ -230,6 +231,8 @@ const AdminMenu = () => {
                   <TableCell align="center">{doc.subtitle}</TableCell>
                   <TableCell align="center">{doc.description || 'Không có mô tả'}</TableCell>
                   <TableCell align="center">{currencyFormat(doc.price)}</TableCell>
+                  <TableCell align="center">{doc.
+                    profitPercentage}%</TableCell>
                   <TableCell align="center">{categories[doc.category] || '---'}</TableCell>
                   <TableCell align="center">{doc.quantity}</TableCell>
                   <TableCell align="center">{units[doc.unit] || '---'}</TableCell>

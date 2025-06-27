@@ -20,6 +20,7 @@ function AdminEdit() {
   const [unit, setUnit] = useState('');
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState('');
+  const [profitPercentage, setProfitPercentage] = useState(0);
   const [type, setType] = useState('');
   const [quantity, setQuantity] = useState(0);
   const [availible, setAvailible] = useState(true);
@@ -45,6 +46,7 @@ function AdminEdit() {
       setDescription(menuData.description || '');
       setUnit(menuData.unit || '');
       setPrice(menuData.price || '');
+      setProfitPercentage(menuData.profitPercentage || 0);
       setType(menuData.type || '');
       setQuantity(menuData.quantity || 0);
       setAvailible(menuData.availible ?? true);
@@ -74,6 +76,7 @@ function AdminEdit() {
       type,
       unit,
       price,
+      profitPercentage,
       availible,
       quantity
     });
@@ -183,6 +186,16 @@ function AdminEdit() {
                 inputProps={{ min: 0 }}
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
+                required
+              />
+
+              <TextField
+                label="Phần trăm lợi nhuận (%)"
+                fullWidth
+                type="number"
+                inputProps={{ min: 0 }}
+                value={profitPercentage}
+                onChange={(e) => setProfitPercentage(parseFloat(e.target.value))}
                 required
               />
 

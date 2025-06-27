@@ -10,7 +10,6 @@ import { toast } from '../../../services/toast';
 import { showNotification } from '../../../services/showNotification';
 import { v4 as uuidv4 } from 'uuid';
 
-// ...giữ nguyên phần import
 
 const AdminMainPage = () => {
   const [tab, setTab] = useState('feature');
