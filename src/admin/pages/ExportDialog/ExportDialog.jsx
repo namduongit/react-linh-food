@@ -40,7 +40,6 @@ const ExportTicketDialog = ({ open, onClose }) => {
     const confirm = await showNotification('Chắc chắn xác nhận xuất hàng ?');
     if (!confirm) return;
 
-
     if (!menuId || !quantity || !reason || Number(quantity) <= 0 || (type === 'discount' && discount <= 0)) {
       return toast({ title: 'Thông báo', message: 'Thiếu hoặc sai thông tin', type: 'error' });
     }
@@ -51,6 +50,15 @@ const ExportTicketDialog = ({ open, onClose }) => {
     }
 
     const qty = Number(quantity);
+
+    if (selectedProduct.quantity < qty) {
+      return toast({
+        title: 'Thông báo',
+        message: `Không đủ hàng trong kho. Hiện còn lại: ${selectedProduct.quantity}`,
+        type: 'warning'
+      });
+    }
+
     const originalPrice = selectedProduct.price;
     const finalPrice = type === 'discount'
       ? Math.round(originalPrice * (1 - discount / 100))
@@ -58,13 +66,15 @@ const ExportTicketDialog = ({ open, onClose }) => {
 
     try {
       if (type === 'discount') {
-        const dataDiscount = selectedProduct;
-        dataDiscount.price = finalPrice;
-        dataDiscount.quantity = Number(quantity);
-        dataDiscount.reason = reason;
-        dataDiscount.discount = Number(discount);
-
+        const dataDiscount = {
+          ...selectedProduct,
+          price: finalPrice,
+          quantity: qty,
+          reason,
+          discount: Number(discount)
+        };
         delete dataDiscount.id;
+
         await projectFirestore.collection('discounts').add(dataDiscount);
       }
 
@@ -89,6 +99,7 @@ const ExportTicketDialog = ({ open, onClose }) => {
       });
 
       toast({ title: 'Thông báo', message: 'Tạo phiếu thành công', type: 'success' });
+
       onClose();
       setForm({ menuId: '', quantity: '', reason: '', discount: 0 });
       setType('cancel');
