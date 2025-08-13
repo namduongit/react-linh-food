@@ -25,16 +25,16 @@ const Footer = () => {
           {/* Cột giữa: Nội dung thông tin */}
           <Grid item xs={12} md={6}>
             <Typography variant="body2" style={{ fontWeight: 'bold', marginBottom: 8 }}>
-              Đồ án tốt nghiệp - Trường Đại học Bách khoa Hà Nội
+              Đồ án học thuật - React & Firebase
             </Typography>
             <Typography variant="body2" gutterBottom>
               Tên đề tài: Hệ thống quản lý cửa hàng hải sản
             </Typography>
             <Typography variant="body2" gutterBottom>
-              Sinh viên thực hiện: Ninh Đức Linh
+              Sinh viên thực hiện: Nguyễn Nam Dương
             </Typography>
             <Typography variant="body2" gutterBottom>
-              Email: ninhduclinh98@gmail.com
+              Email: nguyennamduong205@gmail.com
             </Typography>
             <Typography variant="body2" style={{ paddingTop: 8 }}>
               © 2025 - Dự án học thuật, không sử dụng cho mục đích thương mại
