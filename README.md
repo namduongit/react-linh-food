@@ -20,7 +20,6 @@ This is the shopping cart information page containing the user's products.
 ![Trang upload](./doc/detailpage.png)
 
 This is the product description page.
-
 ---
 
 ### Note
