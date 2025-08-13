@@ -21,6 +21,8 @@ This is the shopping cart information page containing the user's products.
 
 This is the product description page.
 
+---
+
 ### Note
 - This is a project of a learning nature. It is not for commercial purposes.
 - Contact: nguyennamduong205@gmail.com
